@@ -1,0 +1,60 @@
+{
+  "cli": {
+    "version": ">= 5.9.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "node": "20.11.1",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.example.com",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
+        "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/",
+        "NPM_CONFIG_FETCH_RETRIES": "5",
+        "NPM_CONFIG_FETCH_RETRY_FACTOR": "2",
+        "NPM_CONFIG_FETCH_RETRY_MINTIMEOUT": "20000",
+        "NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT": "120000",
+        "NPM_CONFIG_FETCH_TIMEOUT": "300000"
+      },
+      "android": {
+        "gradleCommand": ":app:assembleDebug",
+        "buildType": "apk"
+      },
+      "ios": {
+        "buildConfiguration": "Debug"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "node": "20.11.1",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.example.com",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
+        "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/",
+        "NPM_CONFIG_FETCH_RETRIES": "5",
+        "NPM_CONFIG_FETCH_RETRY_FACTOR": "2",
+        "NPM_CONFIG_FETCH_RETRY_MINTIMEOUT": "20000",
+        "NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT": "120000",
+        "NPM_CONFIG_FETCH_TIMEOUT": "300000"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "production": {
+      "node": "20.11.1",
+      "env": {
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
+        "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/",
+        "NPM_CONFIG_FETCH_RETRIES": "5",
+        "NPM_CONFIG_FETCH_RETRY_FACTOR": "2",
+        "NPM_CONFIG_FETCH_RETRY_MINTIMEOUT": "20000",
+        "NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT": "120000",
+        "NPM_CONFIG_FETCH_TIMEOUT": "300000"
+      }
+    }
+  }
+} 
