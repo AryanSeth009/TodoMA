@@ -26,6 +26,15 @@ export default function SettingsScreen() {
         <ThemeToggle />
       </View>
 
+
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+       <TouchableOpacity>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            History
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={[styles.section, { backgroundColor: colors.card }]}>
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
           Account

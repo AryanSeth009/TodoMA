@@ -5,14 +5,14 @@ import { Text, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useTaskStore } from '@/store/taskStore';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { useTheme } from '@/hooks/useTheme';
-import { notificationService } from '@/services/notificationService';
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const { colors, isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
-  const isAuthenticated = useTaskStore((state) => state.isAuthenticated);
+  const isAuthenticated = useTaskStore((state) => state
+  .isAuthenticated);
   const initializeData = useTaskStore((state) => state.initializeData);
   const isLoading = useTaskStore((state) => state.isLoading);
 
@@ -21,8 +21,6 @@ export default function RootLayout() {
     const setup = async () => {
       try {
         // Configure notifications
-        notificationService.configure();
-        notificationService.createNotificationChannel();
 
         // Wait for next tick
         await new Promise(resolve => setTimeout(resolve, 0));

@@ -17,24 +17,43 @@ router.get('/', auth, async (req, res) => {
 // Create task
 router.post('/', auth, async (req, res) => {
   try {
+    console.log('Backend: Received task creation request with body:', req.body);
     const task = new Task({
       ...req.body,
       user: req.user._id
     });
     await task.save();
+    console.log('Backend: Task saved successfully:', task);
     res.status(201).json(task);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Update task
+// Update task (PATCH - partial update)
 router.patch('/:id', auth, async (req, res) => {
   try {
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
       req.body,
       { new: true }
+    );
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    res.json(task);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update task (PUT - full replacement or create if not exists)
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const task = await Task.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      req.body,
+      { new: true, upsert: true } // upsert creates the document if it doesn't exist
     );
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });

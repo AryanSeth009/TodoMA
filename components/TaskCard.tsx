@@ -68,10 +68,14 @@ export default function TaskCard({ task }: TaskCardProps) {
           <Text style={[typography.cardTitle, styles.title]}>{title}</Text>
         </View>
         <View style={styles.timeRow}>
-          <Clock size={14} color="rgba(0,0,0,0.6)" />
-          <Text style={[typography.small, styles.timeText]}>
-            {startTime} - {endTime}
-          </Text>
+          {startTime && endTime ? (
+            <>
+              <Clock size={14} color="rgba(0,0,0,0.6)" />
+              <Text style={[typography.small, styles.timeText]}>
+                {startTime} - {endTime}
+              </Text>
+            </>
+          ) : null}
         </View>
         {/* Show extra info for completed tasks */}
         {completedAt && (

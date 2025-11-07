@@ -15,13 +15,13 @@ export default function QuickTaskInput() {
     addQuickTask({
       id: Date.now().toString(),
       title: taskTitle,
-      startTime: new Date().toLocaleTimeString(),
-      endTime: new Date().toLocaleTimeString(),
+      completed: false,
       team: [],
       progress: 0,
       color: colors.categoryPeach,
       daysRemaining: 0,
       categoryId: 'quick',
+      createdAt: new Date().toISOString(),
     });
 
     setTaskTitle('');

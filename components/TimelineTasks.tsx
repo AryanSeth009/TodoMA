@@ -16,7 +16,7 @@ export default function TimelineTasks() {
   useEffect(() => {
     console.log('TimelineTasks: Syncing tasks with backend');
     syncTasksWithBackend();
-  }, []);
+  }, [selectedDate]);
 
   // Get the selected date object
   const selectedDateObj = useMemo(() => {
@@ -115,6 +115,13 @@ export default function TimelineTasks() {
         const completedDate = new Date(task.completedAt);
         completedDate.setHours(0, 0, 0, 0);
         return completedDate.getTime() === selectedDateObj.getTime();
+      }
+      
+      // If task has a createdAt field, check if it was created on the selected date
+      if (task.createdAt) {
+        const createdDate = new Date(task.createdAt);
+        createdDate.setHours(0, 0, 0, 0);
+        return createdDate.getTime() === selectedDateObj.getTime();
       }
       
       // Default to showing tasks for today if no date information

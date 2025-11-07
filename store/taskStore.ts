@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Task, ScheduledTask, TeamMember } from '@/types/task';
 import { Category } from '@/types/category';
 import { api } from '@/services/api';
-import { notificationService } from '@/services/notificationService';
 
 interface TaskState {
   // State
@@ -61,7 +60,7 @@ const isTaskOlderThanOneMonth = (task: Task): boolean => {
 
 // Helper function to check if a task is older than its completion time
 const isTaskPastCompletionTime = (task: Task): boolean => {
-  if (!task.endTime) return false;
+  if (!task.endTime || task.quick) return false; // Exclude quick tasks
   
   const now = new Date();
   const [hours, minutes] = task.endTime.split(':').map(Number);
@@ -93,7 +92,7 @@ export const useTaskStore = create(
           console.log('TaskStore - Starting to add task:', task);
           
           // Validate required fields
-          if (!task.title || !task.startTime || !task.endTime) {
+          if (!task.title) {
             console.error('TaskStore - Missing required fields:', task);
             throw new Error('Missing required task fields');
           }
@@ -146,7 +145,6 @@ export const useTaskStore = create(
 
             console.log('TaskStore - Task added successfully');
             // Schedule notification for the new task
-            notificationService.scheduleTaskNotification(createdTask);
           } catch (error) {
             console.error('TaskStore - Error creating task in backend:', error);
             // Remove temporary task from state
@@ -230,8 +228,14 @@ export const useTaskStore = create(
       },
   
       addQuickTask: async (task) => {
-        const newTask = await api.createTask({ ...task, quick: true });
-        set((state) => ({ quickTasks: [...state.quickTasks, newTask] }));
+        const taskToCreate: Partial<Task> = { ...task, quick: true, completed: false };
+        // if (task.startTime) taskToCreate.startTime = task.startTime;
+        // if (task.endTime) taskToCreate.endTime = task.endTime;
+        const newTask = await api.createTask(taskToCreate as Omit<Task, 'id'>);
+        set((state) => ({
+          quickTasks: [...state.quickTasks, newTask],
+          tasks: [...state.tasks, newTask] // Also add to the main tasks array
+        }));
       },
   
       completeTask: async (taskId) => {
@@ -356,9 +360,9 @@ export const useTaskStore = create(
             ),
         }));
           // Cancel existing notification and schedule new one if endTime changed
-          notificationService.cancelTaskNotification(taskId);
+          // notificationService.cancelTaskNotification(taskId); // This line was removed
           if (updates.endTime) {
-            notificationService.scheduleTaskNotification(updatedTask);
+            // notificationService.scheduleTaskNotification(updatedTask); // This line was removed
           }
         } catch (error) {
           console.error('Error updating task:', error);
@@ -374,7 +378,7 @@ export const useTaskStore = create(
         const scheduledTask: ScheduledTask = {
           id: updatedTask.id,
           title: updatedTask.title,
-          time: updatedTask.startTime,
+          time: updatedTask.startTime || 'false',
           team: updatedTask.team || [],
           color: updatedTask.color,
           hasCall: updates.hasCall || false,
@@ -395,7 +399,7 @@ export const useTaskStore = create(
             tasks: state.tasks.filter((task) => task.id !== taskId),
         }));
           // Cancel notification when task is deleted
-          notificationService.cancelTaskNotification(taskId);
+          // notificationService.cancelTaskNotification(taskId); // This line was removed
         } catch (error) {
           console.error('Error deleting task:', error);
           set({ 
@@ -478,14 +482,6 @@ export const useTaskStore = create(
             console.error('Error loading categories:', error);
           }
           
-          // Schedule daily summary notification
-          try {
-            notificationService.scheduleDailySummaryNotification();
-          } catch (error) {
-            console.error('Error scheduling daily summary notification:', error);
-            // Continue with initialization even if notification fails
-          }
-          
           console.log('Data initialization complete');
         } catch (error) {
           console.error('Error initializing data:', error);
@@ -510,6 +506,7 @@ export const useTaskStore = create(
             const activeTasks: Task[] = [];
             const completedTasks: Task[] = [];
             const scheduledTasks: ScheduledTask[] = [];
+            const quickTasks: Task[] = []; // New array for quick tasks
             
             backendTasks.forEach((task: any) => {
               // Debug log for each task
@@ -542,6 +539,10 @@ export const useTaskStore = create(
                 };
                 scheduledTasks.push(scheduledTask);
               } 
+              // Handle quick tasks
+              else if (task.quick) {
+                quickTasks.push(task);
+              }
               // Handle active tasks
               else {
                 // Only include tasks that haven't passed their completion time
@@ -556,18 +557,24 @@ export const useTaskStore = create(
                   };
                   completedTasks.push(completedTask);
                   // Update the task in the backend
+                  console.log('TaskStore - Marking task as completed and updating backend:', completedTask);
                   api.updateTask(task.id, completedTask);
                 }
               }
             });
             
-            console.log(`Synced ${activeTasks.length} active tasks, ${completedTasks.length} completed tasks, ${scheduledTasks.length} scheduled tasks`);
+            console.log(`Synced ${activeTasks.length} active tasks, ${completedTasks.length} completed tasks, ${scheduledTasks.length} scheduled tasks, ${quickTasks.length} quick tasks`);
             
             // Update state with backend data
             set({
-              tasks: activeTasks,
+              tasks: [
+                ...activeTasks,
+                ...completedTasks,
+                ...quickTasks, // Only Task type objects (ScheduledTask is not Task)
+              ], 
               completedTasks: completedTasks,
               scheduledTasks: scheduledTasks,
+              quickTasks: quickTasks,
               isLoading: false
             });
           } else {
@@ -616,11 +623,11 @@ export const useTaskStore = create(
         const totalTasks = todayTasks.length;
 
         if (state.user?.name) {
-          notificationService.sendDailySummaryNotification(
-            completedTasks,
-            totalTasks,
-            state.user.name
-          );
+          // notificationService.sendDailySummaryNotification( // This line was removed
+          //   completedTasks,
+          //   totalTasks,
+          //   state.user.name
+          // );
         }
       }
 }),

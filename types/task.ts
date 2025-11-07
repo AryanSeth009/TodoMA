@@ -10,8 +10,8 @@ export type Task = {
   id: string;
   title: string;
   description?: string;
-  startTime: string;
-  endTime: string;
+  startTime?: string;
+  endTime?: string;
   team: TeamMember[];
   progress: number; // 0-100
   color: string;

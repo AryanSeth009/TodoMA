@@ -7,7 +7,16 @@ module.exports = function (api) {
       }]
     ],
     plugins: [
-      'react-native-reanimated/plugin'
+      'react-native-reanimated/plugin',
+      [
+        'module-resolver',
+        {
+          alias: {
+            stream: 'stream-browserify',
+            'react-dom/server': './emptyModule.js', // Alias react-dom/server to an empty module
+          },
+        },
+      ],
     ],
   };
 }; 

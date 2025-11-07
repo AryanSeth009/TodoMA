@@ -4,6 +4,7 @@ import { ChevronLeft, Calendar, ChevronRight } from 'lucide-react-native';
 import { Avatar } from './Avatar';
 import { useTaskStore } from '@/store/taskStore';
 import { useState, useMemo } from 'react';
+import { goBack } from 'expo-router/build/global-state/routing';
 
 export default function ScheduleHeader() {
   const { colors, typography } = useTheme();
@@ -92,7 +93,7 @@ export default function ScheduleHeader() {
       <View style={styles.leftSection}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={goToPreviousDay}
+          onPress={goBack}
         >
           <ChevronLeft size={24} color={colors.textPrimary} />
         </TouchableOpacity>

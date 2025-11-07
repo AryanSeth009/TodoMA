@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 const taskSchema = new mongoose.Schema({
   // Required fields
   title: { type: String, required: true, trim: true },
-  startTime: { type: String, required: true },
-  endTime: { type: String, required: true },
+  startTime: { type: String }, // Made optional
+  endTime: { type: String },   // Made optional
   team: [{
     id: String,
     name: String,
@@ -23,7 +23,9 @@ const taskSchema = new mongoose.Schema({
   // For scheduled tasks
   scheduled: { type: Boolean, default: false },
   hasCall: { type: Boolean },
-  time: { type: String },
+  time: { type: String, required: false, default: 'false'},
+  // For quick tasks
+  quick: { type: Boolean, default: false },
   // Reference to user
   user: {
     type: mongoose.Schema.Types.ObjectId,
