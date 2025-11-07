@@ -421,6 +421,7 @@ export const useTaskStore = create(
       login: async (email, password) => {
         try {
           const response = await api.login(email, password);
+          await AsyncStorage.setItem('userToken', response.token);
           set({ 
             isAuthenticated: true, 
             user: { 
@@ -454,6 +455,7 @@ export const useTaskStore = create(
   
       logout: async () => {
         await api.logout();
+        await AsyncStorage.removeItem('userToken');
         set({ 
           isAuthenticated: false,
           user: null,

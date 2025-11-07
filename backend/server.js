@@ -9,6 +9,8 @@ import { dirname } from 'path';
 import dns from 'dns';
 import tasksRouter from './src/routes/tasks.js'; // Import task routes
 
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -115,7 +117,6 @@ app.get('/api/health', (req, res) => {
 // Import models
 import { User } from './src/models/User.js';
 import { Category } from './src/models/Category.js';
-import { Task } from './src/models/Task.js';
 
 // Auth Middleware
 const auth = async (req, res, next) => {
