@@ -1,4 +1,4 @@
-package com.mynewapp
+package com.TodoMA
 
 import android.os.Build
 import android.os.Bundle

@@ -3,9 +3,11 @@ import TimelineItem from './TimelineItem';
 import { useTaskStore } from '@/store/taskStore';
 import { useEffect, useMemo } from 'react';
 import { useTheme } from '@/hooks/useTheme';
+import { createTypography } from '../styles/typography'; // Corrected import path
 
 export default function TimelineTasks() {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme(); // Remove typography from destructuring
+  const typography = useMemo(() => createTypography(colors), [colors]); // Initialize typography
   const tasks = useTaskStore((state) => state.tasks);
   const completedTasks = useTaskStore((state) => state.completedTasks);
   const scheduledTasks = useTaskStore((state) => state.scheduledTasks);
@@ -38,7 +40,11 @@ export default function TimelineTasks() {
   // Debug logs
   useEffect(() => {
     console.log(`TimelineTasks: Rendering with ${tasks.length} active tasks, ${completedTasks.length} completed tasks, ${scheduledTasks.length} scheduled tasks for ${formattedDate}`);
-  }, [tasks, completedTasks, scheduledTasks, formattedDate]);
+    console.log('TimelineTasks: Current selectedDate (timestamp):', selectedDate);
+    console.log('TimelineTasks: Active tasks:', JSON.stringify(tasks, null, 2));
+    console.log('TimelineTasks: Completed tasks:', JSON.stringify(completedTasks, null, 2));
+    console.log('TimelineTasks: Scheduled tasks:', JSON.stringify(scheduledTasks, null, 2));
+  }, [tasks, completedTasks, scheduledTasks, formattedDate, selectedDate]);
 
   // Generate time slots from 9 AM to 6 PM
   const hours = useMemo(() => {
@@ -103,96 +109,80 @@ export default function TimelineTasks() {
   
     // Helper function to check if a task is for the selected date
     const isTaskForSelectedDate = (task: any) => {
-      // If task has a date field, use it
-      if (task.date) {
-        const taskDate = new Date(task.date);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === selectedDateObj.getTime();
+      const normalizeDate = (dateToNormalize: string | number | Date) => {
+        const d = new Date(dateToNormalize);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+      };
+
+      const normalizedSelectedDate = selectedDateObj.getTime();
+
+      // Completed tasks should show on their completedAt date
+      if (task.completed && task.completedAt) {
+        return normalizeDate(task.completedAt) === normalizedSelectedDate;
       }
-      
-      // If task has a completedAt field, check if it was completed on the selected date
-      if (task.completedAt) {
-        const completedDate = new Date(task.completedAt);
-        completedDate.setHours(0, 0, 0, 0);
-        return completedDate.getTime() === selectedDateObj.getTime();
+
+      // Scheduled tasks should show on the selected date. Their time will be used for grouping.
+      if (task.scheduled) {
+        // Assuming scheduled tasks are meant for the 'selectedDate' in general
+        // and not tied to a specific date field within the task object itself beyond 'time'.
+        // This means if a scheduled task has a time, it should appear on the selected day.
+        // If there was a 'date' field for scheduled tasks, we'd use that here.
+        // For now, if the selectedDate matches the current date being rendered, show all scheduled tasks.
+        // The grouping by hour will handle their specific time.
+        return true; // Simplified: all scheduled tasks from the store will be considered
       }
-      
-      // If task has a createdAt field, check if it was created on the selected date
+
+      // Active tasks should show on their startTime or createdAt date
+      if (task.startTime) {
+        return normalizeDate(task.startTime) === normalizedSelectedDate;
+      }
       if (task.createdAt) {
-        const createdDate = new Date(task.createdAt);
-        createdDate.setHours(0, 0, 0, 0);
-        return createdDate.getTime() === selectedDateObj.getTime();
+        return normalizeDate(task.createdAt) === normalizedSelectedDate;
       }
-      
-      // Default to showing tasks for today if no date information
+
+      // Fallback: if no specific date field, assume it's for today (if selectedDate is today)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      return selectedDateObj.getTime() === today.getTime();
+      return normalizedSelectedDate === today.getTime();
     };
     
     // Filter tasks for the selected date and add them to the appropriate time slots
     
-    // Add scheduled tasks for the selected date
-    scheduledTasks.forEach(task => {
-      if (isTaskForSelectedDate(task)) {
-        const normalizedTime = normalizeTimeFormat(task.time);
-        // Find the closest time slot
-        const matchingHour = hours.find(hour => 
-          normalizedTime.includes(hour) || hour.includes(normalizedTime));
-        
-        if (matchingHour && groupedTasks[matchingHour]) {
-          groupedTasks[matchingHour].push(task);
-        } else {
-          // If no exact match, try to find the closest time slot
-          const defaultHour = '9:00 AM';
-          groupedTasks[defaultHour].push(task);
-        }
+    // Combine all tasks for easier processing, ensuring uniqueness
+    const allTasks = [...tasks, ...scheduledTasks, ...completedTasks]
+      .filter((task, index, self) => 
+        index === self.findIndex(t => t.id === task.id) // Use task.id for uniqueness
+      );
+    console.log('TimelineTasks: All tasks before date filter:', JSON.stringify(allTasks, null, 2));
+    const filteredTasks = allTasks.filter(isTaskForSelectedDate);
+    console.log('TimelineTasks: All tasks AFTER date filter:', JSON.stringify(filteredTasks, null, 2));
+
+    filteredTasks.forEach(task => {
+      let timeToUse;
+      if (task.completed && task.completedAt) {
+        // For completed tasks, use completedAt
+        timeToUse = task.completedAt;
+      } else if (task.scheduled) {
+        // For scheduled tasks, use task.time
+        timeToUse = task.time;
+      } else {
+        // For active tasks, use startTime
+        timeToUse = task.startTime;
       }
-    });
-    
-    // Add regular tasks for the selected date
-    tasks.forEach(task => {
-      if (isTaskForSelectedDate(task)) {
-        const normalizedTime = normalizeTimeFormat(task.startTime);
-        // Find the closest time slot
-        const matchingHour = hours.find(hour => 
-          normalizedTime.includes(hour) || hour.includes(normalizedTime));
-        
-        if (matchingHour && groupedTasks[matchingHour]) {
-          groupedTasks[matchingHour].push(task);
-        } else {
-          // If no exact match, add to 9 AM as default
-          const defaultHour = '9:00 AM';
-          groupedTasks[defaultHour].push(task);
-        }
-      }
-    });
-    
-    // Add completed tasks for the selected date (only those less than 1 month old)
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    
-    completedTasks.forEach(task => {
-      // Skip tasks completed more than a month ago
-      if (task.completedAt) {
-        const completedDate = new Date(task.completedAt);
-        if (completedDate <= oneMonthAgo) return;
-        
-        // Only include if it was completed on the selected date
-        if (isTaskForSelectedDate(task)) {
-          const normalizedTime = normalizeTimeFormat(task.startTime);
-          // Find the closest time slot
-          const matchingHour = hours.find(hour => 
-            normalizedTime.includes(hour) || hour.includes(normalizedTime));
-          
-          if (matchingHour && groupedTasks[matchingHour]) {
-            groupedTasks[matchingHour].push(task);
-          } else {
-            // If no exact match, add to 9 AM as default
-            const defaultHour = '9:00 AM';
-            groupedTasks[defaultHour].push(task);
-          }
-        }
+
+      if (!timeToUse) return;
+
+      const normalizedTime = normalizeTimeFormat(timeToUse);
+      const matchingHour = hours.find(hour =>
+        normalizedTime.includes(hour) || hour.includes(normalizedTime)
+      );
+
+      if (matchingHour && groupedTasks[matchingHour]) {
+        groupedTasks[matchingHour].push(task);
+      } else {
+        const defaultHour = '9:00 AM';
+        groupedTasks[defaultHour].push(task);
       }
     });
     

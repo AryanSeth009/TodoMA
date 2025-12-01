@@ -3,7 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/hooks/*": ["./app/hooks/*"]
     },
     "allowJs": true,
     "esModuleInterop": true,

@@ -3,7 +3,7 @@ import { Task } from '@/types/task';
 import { Platform } from 'react-native';
 
 // Determine the correct API URL based on environment
-const getApiUrl = () => {
+export const getApiUrl = () => {
   if (__DEV__) {
     // Development environment
     if (Platform.OS === 'web') {
@@ -11,6 +11,7 @@ const getApiUrl = () => {
       return 'http://localhost:5000/api';
     }
     if (Platform.OS === 'android') {
+      console.log('Detected Platform.OS as Android'); // Added log
       // For Android emulator
       return 'http://10.0.2.2:5000/api';
     }
@@ -77,13 +78,23 @@ class ApiService {
   private readonly TIMEOUT_MS = 30000; // Increased timeout to 30 seconds
 
   constructor() {
-    this.loadToken();
+    // Do not load token in constructor to avoid window is not defined error on web SSR
+  }
+
+  async init() {
+    console.log('ApiService: Initializing...');
+    await this.loadToken();
   }
 
   private async loadToken() {
     try {
+      // Ensure this runs only client-side
+      if (typeof window !== 'undefined' || Platform.OS !== 'web') {
       this.token = await AsyncStorage.getItem('token');
       console.log('Token loaded:', this.token ? 'Present' : 'Not present');
+      } else {
+        console.log('Skipping token load: window is undefined (SSR/Node.js environment)');
+      }
     } catch (error) {
       console.error('Error loading token:', error);
     }
@@ -402,4 +413,13 @@ class ApiService {
   }
 }
 
-export const api = new ApiService();
+let apiInstance: ApiService | null = null;
+
+export const getApiService = () => {
+  if (!apiInstance) {
+    apiInstance = new ApiService();
+  }
+  return apiInstance;
+};
+
+export const api = getApiService();

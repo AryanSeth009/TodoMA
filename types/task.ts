@@ -6,6 +6,7 @@ export type TeamMember = {
 };
 
 export type Task = {
+  id: Key | null | undefined;
   createdAt?: string | number | Date;
   _id?: string; // MongoDB _id
   localId?: string; // Client-side ID for offline tasks

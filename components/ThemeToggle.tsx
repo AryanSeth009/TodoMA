@@ -1,21 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { useThemeMode } from '@/context/ThemeContext';
 import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
+import { createTypography } from '../styles/typography';
 
 export function ThemeToggle() {
-  const { mode, setMode } = useThemeMode();
-  const { colors } = useTheme();
-
-  const toggleTheme = () => {
-    if (mode === 'light') setMode('dark');
-    else if (mode === 'dark') setMode('system');
-    else setMode('light');
-  };
+  const { colors, theme, toggleTheme } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
 
   const getIcon = () => {
-    switch (mode) {
+    switch (theme) {
       case 'light':
         return 'sunny';
       case 'dark':
@@ -26,7 +20,7 @@ export function ThemeToggle() {
   };
 
   const getLabel = () => {
-    switch (mode) {
+    switch (theme) {
       case 'light':
         return 'Light';
       case 'dark':
@@ -41,7 +35,7 @@ export function ThemeToggle() {
       onPress={toggleTheme}
       style={[
         styles.container,
-        { backgroundColor: colors.inputBackground }
+        { backgroundColor: colors.card }
       ]}
     >
       <Ionicons 
@@ -50,7 +44,7 @@ export function ThemeToggle() {
         color={colors.textPrimary}
         style={styles.icon}
       />
-      <Text style={[styles.text, { color: colors.textPrimary }]}>
+      <Text style={[typography.label, styles.text, { color: colors.textPrimary }]}>
         {getLabel()}
       </Text>
     </TouchableOpacity>
@@ -68,7 +62,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   text: {
-    fontSize: 14,
-    fontWeight: '500',
+    // fontSize: 14, // Removed, handled by typography.label
+    // fontWeight: '500', // Removed, handled by typography.label
   },
 });

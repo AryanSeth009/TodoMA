@@ -3,13 +3,17 @@ import { useTheme } from '@/hooks/useTheme';
 import { ScheduledTask } from '@/types/task';
 import TeamAvatars from './TeamAvatars';
 import { Phone } from 'lucide-react-native';
+import { useMemo } from 'react';
+import { createTypography } from '../styles/typography';
+import { colors } from '@/styles/colors';
 
-type ScheduledTaskCardProps = {
+type ScheduledardProps = {
   task: ScheduledTask;
 };
 
-export default function ScheduledTaskCard({ task }: ScheduledTaskCardProps) {
-  const { colors, typography } = useTheme();
+export default function Scheduledard({ task }: ScheduledardProps) {
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const { title, team, color, hasCall } = task;
 
   return (
@@ -34,9 +38,9 @@ export default function ScheduledTaskCard({ task }: ScheduledTaskCardProps) {
       
       {hasCall && (
         <TouchableOpacity 
-          style={[styles.callButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
+          style={[styles.callButton, { backgroundColor: colors.card }]}
         >
-          <Phone size={16} color="rgba(0,0,0,0.7)" />
+          <Phone size={16} color={colors.textPrimary} />
         </TouchableOpacity>
       )}
     </View>
@@ -57,7 +61,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    color: 'rgba(0,0,0,0.85)',
+    color: colors.textPrimary, // Use theme color
     marginBottom: 8,
   },
   teamContainer: {

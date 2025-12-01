@@ -37,7 +37,7 @@ export default function AddTaskButton({ isScheduled = false }: AddTaskButtonProp
           activeOpacity={0.8}
           onPress={() => setIsModalVisible(true)}
         >
-          <Plus size={24} color={colors.white} />
+          <Plus size={24} color={colors.onPrimary} />
         </TouchableOpacity>
       </Animated.View>
 

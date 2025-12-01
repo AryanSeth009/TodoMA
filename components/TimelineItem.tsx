@@ -4,6 +4,8 @@ import { Task, ScheduledTask } from '@/types/task';
 import ScheduledTaskCard from './ScheduledTaskCard';
 import TaskCard from './TaskCard';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { useMemo } from 'react';
+import { createTypography } from '../styles/typography';
 
 type TimelineItemProps = {
   time: string;
@@ -12,7 +14,8 @@ type TimelineItemProps = {
 };
 
 export default function TimelineItem({ time, isLast, tasks }: TimelineItemProps) {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
 
   return (
     <View style={styles.container}>
@@ -39,13 +42,36 @@ export default function TimelineItem({ time, isLast, tasks }: TimelineItemProps)
             entering={FadeIn.duration(300)}
             style={styles.tasksContainer}
           >
-            {tasks.map((task) => (
-              'time' in task ? (
-                <ScheduledTaskCard key={task.id} task={task as ScheduledTask} />
-              ) : (
-                <TaskCard key={task.id} task={task as Task} />
-              )
-            ))}
+            {tasks.map((task) => {
+              // Determine the time to display based on task type and completion status
+              let displayTime = '';
+              if ('completedAt' in task && task.completedAt) {
+                // Extract time from completedAt
+                const date = new Date(task.completedAt);
+                displayTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+              } else if ('time' in task && task.time) {
+                // For scheduled tasks, use their specific time
+                displayTime = task.time;
+              } else if ('startTime' in task && task.startTime) {
+                // For active tasks, use their start time
+                displayTime = task.startTime;
+              }
+
+              return (
+                <View key={task.id} style={styles.taskEntry}>
+                  {displayTime ? (
+                    <Text style={[typography.small, { color: colors.textSecondary, marginRight: 8 }]}>
+                      {displayTime}
+                    </Text>
+                  ) : null}
+                  {'time' in task ? (
+                    <ScheduledTaskCard key={task.id} task={task as ScheduledTask} />
+                  ) : (
+                    <TaskCard key={task.id} task={task as Task} />
+                  )}
+                </View>
+              );
+            })}
           </Animated.View>
         ) : null}
       </View>
@@ -77,6 +103,11 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   tasksContainer: {
-    marginBottom: 8,
+    // Remove marginBottom as individual taskEntry will handle spacing
+  },
+  taskEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8, // Add spacing between tasks
   },
 });

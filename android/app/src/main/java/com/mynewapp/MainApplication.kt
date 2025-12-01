@@ -1,4 +1,4 @@
-package com.mynewapp
+package com.TodoMA
 
 import android.app.Application
 import android.content.res.Configuration

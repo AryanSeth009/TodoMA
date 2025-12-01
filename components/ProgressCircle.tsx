@@ -1,6 +1,8 @@
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { useTheme } from '@/hooks/useTheme';
+import { createTypography } from '@/styles/typography';
+import { useMemo } from 'react';
 
 type ProgressCircleProps = {
   progress: number;
@@ -13,7 +15,8 @@ export default function ProgressCircle({
   size = 40, 
   strokeWidth = 3 
 }: ProgressCircleProps) {
-  const { typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   
   // Calculate values for the progress circle
   const radius = (size - strokeWidth) / 2;

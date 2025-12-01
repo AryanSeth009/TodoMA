@@ -23,7 +23,7 @@ const AddTaskButton: React.FC<AddTaskButtonProps> = ({ addTask }) => {
       style={[styles.button, { backgroundColor: colors.primary }]} 
       onPress={handlePress}
     >
-      <Plus size={28} color={colors.white} />
+      <Plus size={28} color={colors.onPrimary} />
     </TouchableOpacity>
   );
 };

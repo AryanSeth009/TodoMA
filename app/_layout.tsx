@@ -2,13 +2,40 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useTaskStore } from '@/store/taskStore';
-import { ThemeProvider } from '@/context/ThemeContext';
-import { useTheme } from '@/hooks/useTheme';
+import * as Font from 'expo-font';
+import { SplashScreen } from 'expo-router';
+import { useTaskStore } from '../store/taskStore';
+import { TASK_COLORS } from '../store/taskStore';
+import { ThemeProvider, useTheme } from '@/hooks/useTheme'; // Import ThemeProvider from useTheme.tsx
+import { useMemo } from 'react';
+import { createTypography } from '../styles/typography';
 
-export default function RootLayout() {
+SplashScreen.preventAutoHideAsync();
+
+function AppContent() {
   const [isReady, setIsReady] = useState(false);
+  const [fontsLoaded, fontError] = Font.useFonts({
+    'Poppins-Black': require('../assets/fonts/Poppins-Black.ttf'),
+    'Poppins-BlackItalic': require('../assets/fonts/Poppins-BlackItalic.ttf'),
+    'Poppins-Bold': require('../assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-BoldItalic': require('../assets/fonts/Poppins-BoldItalic.ttf'),
+    'Poppins-ExtraBold': require('../assets/fonts/Poppins-ExtraBold.ttf'),
+    'Poppins-ExtraBoldItalic': require('../assets/fonts/Poppins-ExtraBoldItalic.ttf'),
+    'Poppins-ExtraLight': require('../assets/fonts/Poppins-ExtraLight.ttf'),
+    'Poppins-ExtraLightItalic': require('../assets/fonts/Poppins-ExtraLightItalic.ttf'),
+    'Poppins-Italic': require('../assets/fonts/Poppins-Italic.ttf'),
+    'Poppins-Light': require('../assets/fonts/Poppins-Light.ttf'),
+    'Poppins-LightItalic': require('../assets/fonts/Poppins-LightItalic.ttf'),
+    'Poppins-Medium': require('../assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-MediumItalic': require('../assets/fonts/Poppins-MediumItalic.ttf'),
+    'Poppins-Regular': require('../assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-SemiBold': require('../assets/fonts/Poppins-SemiBold.ttf'),
+    'Poppins-SemiBoldItalic': require('../assets/fonts/Poppins-SemiBoldItalic.ttf'),
+    'Poppins-Thin': require('../assets/fonts/Poppins-Thin.ttf'),
+    'Poppins-ThinItalic': require('../assets/fonts/Poppins-ThinItalic.ttf'),
+  });
   const { colors, isDark } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]); // Initialize typography
   const segments = useSegments();
   const router = useRouter();
   const isAuthenticated = useTaskStore((state) => state
@@ -18,28 +45,38 @@ export default function RootLayout() {
 
   // Use useLayoutEffect for navigation setup
   useLayoutEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    if (fontError) throw fontError;
+  }, [fontError]);
+
+  // Re-integrate initial setup effect
+  useEffect(() => {
     const setup = async () => {
       try {
-        // Configure notifications
-
-        // Wait for next tick
-        await new Promise(resolve => setTimeout(resolve, 0));
-        
+        // Configure notifications or any other initial setup
+        await SplashScreen.hideAsync(); // Hide splash screen once fonts are loaded and initial setup is done
         setIsReady(true);
       } catch (error) {
-        console.error('Setup error:', error);
-        setIsReady(true); // Still set ready even if notifications fail
+        console.error('Initial setup error:', error);
+        setIsReady(true); // Still set ready even if setup fails
       }
     };
-    setup();
-  }, []);
+    if (fontsLoaded) {
+      setup();
+    }
+  }, [fontsLoaded]); // Trigger setup when fonts are loaded
 
   // Handle authentication routing
   useEffect(() => {
     if (!isReady) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const shouldRedirect = 
+    const shouldRedirect =
       (!isAuthenticated && !inAuthGroup) ||
       (isAuthenticated && inAuthGroup);
 
@@ -53,32 +90,44 @@ export default function RootLayout() {
   useEffect(() => {
     if (isAuthenticated && isReady) {
       console.log('User is authenticated, initializing data...');
-      initializeData();
+      // Pass the taskColors array when initializing data
+      initializeData(TASK_COLORS);
     }
-  }, [isAuthenticated, isReady]);
+  }, [isAuthenticated, isReady, initializeData]);
 
   // Always render the Slot first
-    return (
+  return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Slot />
-      {!isReady && (
+      {(!fontsLoaded || !isReady) ? (
         <View style={[StyleSheet.absoluteFill, styles.centered]}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textPrimary }]}>
-            Loading...
+          <Text style={[typography.body, styles.loadingText, { color: colors.textPrimary }]}>
+            {fontError ? 'Error loading fonts' : 'Loading...'}
           </Text>
         </View>
+      ) : (
+        <>
+          <Slot />
+          {isLoading && (
+            <View style={[StyleSheet.absoluteFill, styles.centered]}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[typography.body, styles.loadingText, { color: colors.textPrimary }]}>
+                Loading your tasks...
+              </Text>
+            </View>
+          )}
+          <StatusBar style={isDark ? 'light' : 'dark'} />
+        </>
       )}
-      {isLoading && (
-        <View style={[StyleSheet.absoluteFill, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textPrimary }]}>
-          Loading your tasks...
-        </Text>
-      </View>
-      )}
-      <StatusBar style={isDark ? 'light' : 'dark'} />
     </View>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 
@@ -93,7 +142,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 16,
+    // fontSize: 16, // Removed, handled by typography.body
     textAlign: 'center',
   },
 });

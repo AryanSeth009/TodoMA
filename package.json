@@ -1,5 +1,5 @@
 {
-  "name": "mynewapp",
+  "name": "TodoMA",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {

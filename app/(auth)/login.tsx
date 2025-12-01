@@ -1,12 +1,14 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ImageBackground, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTaskStore } from '@/store/taskStore';
 import { router, Link } from 'expo-router';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { createTypography } from '../../styles/typography';
 
 export default function LoginScreen() {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,60 @@ export default function LoginScreen() {
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+    },
+    login: {
+      color: colors.primary,
+    },
+    content: {
+      padding: 24,
+    },
+    form: {
+      gap: 16,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      position: 'relative',
+    },
+    inputIcon: {
+      position: 'absolute',
+      left: 16,
+      zIndex: 1,
+    },
+    input: {
+      flex: 1,
+      height: 48,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingLeft: 48,
+    },
+    eyeIcon: {
+      position: 'absolute',
+      right: 16,
+    },
+    button: {
+      height: 48,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 24,
+    },
+    linkContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 16,
+    },
+  }), [colors]); // Recreate styles if colors change
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -72,6 +128,7 @@ export default function LoginScreen() {
                 <Mail size={20} color={colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={[
+                    typography.body,
                     styles.input,
                     { backgroundColor: colors.inputBackground, color: colors.textPrimary }
                   ]}
@@ -88,6 +145,7 @@ export default function LoginScreen() {
                 <Lock size={20} color={colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={[
+                    typography.body,
                     styles.input,
                     { backgroundColor: colors.inputBackground, color: colors.textPrimary }
                   ]}
@@ -110,12 +168,12 @@ export default function LoginScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.button, {  opacity: loading ? 0.7 : 1 }]}
+                style={[styles.button, { backgroundColor: colors.primary, opacity: loading ? 0.7 : 1 }]}
                 onPress={handleLogin}
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color={colors.white} />
+                  <ActivityIndicator color={colors.textPrimary} />
                 ) : (
                   <Text style={[typography.buttonText, { color: colors.white }]}>
                     Login
@@ -140,59 +198,3 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-  },
-  login: {
-    color: '#EF4045',
-  },
-  content: {
-    padding: 24,
-  },
-  form: {
-    gap: 16,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  inputIcon: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
-  },
-  input: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingLeft: 48,
-    fontSize: 16,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 16,
-  },
-  button: {
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 24,
-    backgroundColor: '#EF4045',
-  },
-  linkContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-  },
-});

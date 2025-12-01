@@ -1,34 +1,36 @@
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Search, SlidersHorizontal } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { createTypography } from '../styles/typography';
 
 export default function SearchBar() {
   const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const [searchText, setSearchText] = useState('');
 
   return (
     <View style={styles.container}>
       <View 
         style={[
-          styles.searchContainer, 
-          { backgroundColor: colors.inputBackground }
+          styles.searchContainer,
+          { backgroundColor: colors.background }
         ]}
       >
         <Search size={20} color={colors.textSecondary} style={styles.searchIcon} />
         <TextInput
-          style={[styles.input, { color: colors.textPrimary }]}
+          style={[typography.body, styles.input, { color: colors.textPrimary }]} // Apply typography.body
           placeholder="Search"
           placeholderTextColor={colors.textSecondary}
           value={searchText}
           onChangeText={setSearchText}
         />
       </View>
-      <TouchableOpacity 
-        style={[styles.filterButton, { backgroundColor: colors.dark }]}
+      <TouchableOpacity
+        style={[styles.filterButton, { backgroundColor: colors.black }]}
         activeOpacity={0.7}
       >
-        <SlidersHorizontal size={20} color={colors.white} />
+        <SlidersHorizontal size={20} color={colors.inputBackground} />
       </TouchableOpacity>
     </View>
   );
@@ -54,8 +56,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    // fontSize: 16, // Removed, handled by typography.body
     height: '100%',
+  
   },
   filterButton: {
     width: 48,

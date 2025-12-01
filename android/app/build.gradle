@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.mynewapp"
+    namespace "com.TodoMA"
     defaultConfig {
-        applicationId "com.mynewapp"
+        applicationId "com.TodoMA"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

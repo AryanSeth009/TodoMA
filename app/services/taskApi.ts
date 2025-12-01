@@ -1,12 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Task } from '../../types/task'; // Assuming your Task type is here
+import { api, getApiUrl } from '../../services/api'; // Corrected import path and imported getApiUrl
 
-const API_BASE_URL = 'http://localhost:5000/api'; // Replace with your actual backend URL
+// Use the dynamically determined API_URL from services/api.ts
+const API_BASE_URL = getApiUrl(); // Use a getter if API_URL is private
 
 export const getAuthToken = async (): Promise<string | null> => {
   // Implement logic to retrieve the user's authentication token from AsyncStorage
-  // For example, if you store it as 'userToken'
-  return await AsyncStorage.getItem('userToken');
+  // Use the standardized 'token' key
+  return await AsyncStorage.getItem('token'); // Changed from 'userToken' to 'token'
 };
 
 export const fetchAllTasks = async (): Promise<Task[]> => {
@@ -96,3 +98,4 @@ export const deleteTask = async (taskId: string): Promise<void> => {
     throw new Error(errorData.error || 'Failed to delete task from backend');
   }
 };
+

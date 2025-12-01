@@ -36,8 +36,8 @@ const QuickTaskInput: React.FC<QuickTaskInputProps> = ({ addTask }) => {
         onChangeText={setTaskTitle}
         onSubmitEditing={handleAddTask}
       />
-      <TouchableOpacity onPress={handleAddTask} style={styles.addButton}>
-        <Plus size={24} color={colors.white} />
+      <TouchableOpacity onPress={handleAddTask} style={[styles.addButton, { backgroundColor: colors.primary }]}>
+        <Plus size={24} color={colors.onPrimary} />
       </TouchableOpacity>
     </View>
   );

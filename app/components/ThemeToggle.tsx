@@ -1,37 +1,68 @@
-import React from 'react';
-import { Switch, Text, View, StyleSheet } from 'react-native';
-import { useThemeMode } from '../../context/ThemeContext'; // Adjust path as necessary
+import React, { useMemo } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
+import { Ionicons } from '@expo/vector-icons';
+import { createTypography } from '../../styles/typography';
 
-const ThemeToggle: React.FC = () => {
-  const { isDark, setMode } = useThemeMode();
-  const { colors, typography } = useTheme();
+export function ThemeToggle() {
+  const { colors, theme, toggleTheme } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
 
-  const toggleSwitch = () => {
-    setMode(isDark ? 'light' : 'dark');
+  const getIcon = () => {
+    switch (theme) {
+      case 'light':
+        return 'sunny';
+      case 'dark':
+        return 'moon';
+      default:
+        return 'phone-portrait';
+    }
+  };
+
+  const getLabel = () => {
+    switch (theme) {
+      case 'light':
+        return 'Light';
+      case 'dark':
+        return 'Dark';
+      default:
+        return 'System';
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={[typography.body, { color: colors.textPrimary }]}>Dark Mode</Text>
-      <Switch
-        trackColor={{ false: colors.textSecondary, true: colors.primary }}
-        thumbColor={colors.white}
-        ios_backgroundColor={colors.textSecondary}
-        onValueChange={toggleSwitch}
-        value={isDark}
+    <TouchableOpacity
+      onPress={toggleTheme}
+      style={[
+        styles.container,
+        { backgroundColor: colors.card }
+      ]}
+    >
+      <Ionicons 
+        name={getIcon()} 
+        size={20} 
+        color={colors.textPrimary}
+        style={styles.icon}
       />
-    </View>
+      <Text style={[typography.label, styles.text, { color: colors.textPrimary }]}>
+        {getLabel()}
+      </Text>
+    </TouchableOpacity>
   );
-};
-
-export { ThemeToggle };
+}
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    padding: 8,
+    borderRadius: 8,
   },
-});
+  icon: {
+    marginRight: 8,
+  },
+  text: {
+    // fontSize: 14, // Removed, handled by typography.label
+    // fontWeight: '500', // Removed, handled by typography.label
+  },
+}); 

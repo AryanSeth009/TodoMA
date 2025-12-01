@@ -12,6 +12,8 @@ module.exports = function (api) {
         'module-resolver',
         {
           alias: {
+            '@/hooks/*': './app/hooks/*', // Ensure wildcard matching for hooks
+            '@/hooks': './app/hooks', // Keep the directory alias for direct folder imports
             stream: 'stream-browserify',
             'react-dom/server': './emptyModule.js', // Alias react-dom/server to an empty module
           },

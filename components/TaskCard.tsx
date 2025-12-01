@@ -5,6 +5,8 @@ import TeamAvatars from './TeamAvatars';
 import { Clock, CheckCircle2, Circle } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useTaskStore } from '@/store/taskStore';
+import { useMemo } from 'react';
+import { createTypography } from '../styles/typography';
 
 type TaskCardProps = {
   task: Task;
@@ -17,7 +19,8 @@ function formatDate(dateStr?: string | number | Date) {
 }
 
 export default function TaskCard({ task }: TaskCardProps) {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const { title, team, startTime, endTime, color, description, categoryId, completedAt } = task;
   const completeTask = useTaskStore(state => state.completeTask);
   const updateTask = useTaskStore(state => state.updateTask);
@@ -70,7 +73,7 @@ export default function TaskCard({ task }: TaskCardProps) {
         <View style={styles.timeRow}>
           {startTime && endTime ? (
             <>
-              <Clock size={14} color="rgba(0,0,0,0.6)" />
+              <Clock size={14} color={colors.textSecondary} />
               <Text style={[typography.small, styles.timeText]}>
                 {startTime} - {endTime}
               </Text>
@@ -103,9 +106,9 @@ export default function TaskCard({ task }: TaskCardProps) {
         activeOpacity={0.7}
       >
         {task.completedAt ? (
-          <CheckCircle2 size={28} color={colors.primary || 'rgba(0,0,0,0.7)'} />
+          <CheckCircle2 size={28} color={colors.primary} />
         ) : (
-          <Circle size={28} color="rgba(0,0,0,0.4)" />
+          <Circle size={28} color={colors.textSecondary} />
         )}
       </TouchableOpacity>
     </Animated.View>

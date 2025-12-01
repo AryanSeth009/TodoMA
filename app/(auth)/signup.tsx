@@ -1,12 +1,14 @@
 import { View, Text, StyleSheet, TextInput, ImageBackground, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTaskStore } from '@/store/taskStore';
 import { router, Link } from 'expo-router';
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react-native';
+import { createTypography } from '../../styles/typography';
 
 export default function SignupScreen() {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -62,10 +64,10 @@ export default function SignupScreen() {
       >
         <View style={styles.overlay}>
           <View style={styles.content}>
-            <Text style={[typography.heading, { color: colors.white, marginBottom: 8 }]}>
+            <Text style={[typography.heading, { color: colors.textPrimary, marginBottom: 8 }]}>
               Create Account
             </Text>
-            <Text style={[typography.body, { color: colors.white, opacity: 0.8, marginBottom: 32 }]}>
+            <Text style={[typography.body, { color: colors.textPrimary, opacity: 0.8, marginBottom: 32 }]}>
               Join us to get started
             </Text>
 
@@ -74,6 +76,7 @@ export default function SignupScreen() {
                 <User size={20} color={colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={[
+                    typography.body,
                     styles.input,
                     { backgroundColor: colors.inputBackground, color: colors.textPrimary }
                   ]}
@@ -89,6 +92,7 @@ export default function SignupScreen() {
                 <Mail size={20} color={colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={[
+                    typography.body,
                     styles.input,
                     { backgroundColor: colors.inputBackground, color: colors.textPrimary }
                   ]}
@@ -105,6 +109,7 @@ export default function SignupScreen() {
                 <Lock size={20} color={colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={[
+                    typography.body,
                     styles.input,
                     { backgroundColor: colors.inputBackground, color: colors.textPrimary }
                   ]}
@@ -130,6 +135,7 @@ export default function SignupScreen() {
                 <Lock size={20} color={colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={[
+                    typography.body,
                     styles.input,
                     { backgroundColor: colors.inputBackground, color: colors.textPrimary }
                   ]}
@@ -152,21 +158,21 @@ export default function SignupScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.button, {  opacity: loading ? 0.7 : 1 }]}
+                style={[styles.button, { backgroundColor: colors.primary, opacity: loading ? 0.7 : 1 }]}
                 onPress={handleSignup}
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color={colors.white} />
+                  <ActivityIndicator color={colors.textPrimary} />
                 ) : (
-                  <Text style={[typography.buttonText, { color: colors.white }]}>
+                  <Text style={[typography.buttonText, { color: colors.textPrimary }]}>
                     Sign Up
                   </Text>
                 )}
               </TouchableOpacity>
 
               <View style={styles.linkContainer}>
-                <Text style={[typography.body, { color: colors.white }]}>
+                <Text style={[typography.body, { color: colors.textPrimary }]}>
                   Already have an account?{' '}
                 </Text>
                 <Link href="/login" asChild>
@@ -217,7 +223,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingLeft: 48,
-    fontSize: 16,
   },
   eyeIcon: {
     position: 'absolute',
@@ -229,8 +234,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 24,
-    backgroundColor:'#EF4045'
-    
   },
   linkContainer: {
     flexDirection: 'row',

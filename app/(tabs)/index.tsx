@@ -11,10 +11,13 @@ import AddTaskButton from '@/components/AddTaskButton';
 import { StatusBar } from 'expo-status-bar';
 import { useTaskSync } from '../hooks/useTaskSync';
 import { Task } from '../../types/task';
+import { useMemo } from 'react';
+import { createTypography } from '../../styles/typography';
 
 const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const { tasks, loading, error, addTask, updateTask, deleteTask } = useTaskSync();
 
   const activeTasks = tasks.filter(task => !task.completedAt);
@@ -24,7 +27,7 @@ const HomeScreen = () => {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ color: colors.textPrimary, marginTop: 10 }}>Loading tasks...</Text>
+        <Text style={[typography.body, { color: colors.textPrimary, marginTop: 10 }]}>Loading tasks...</Text>
       </View>
     );
   }
@@ -32,8 +35,8 @@ const HomeScreen = () => {
   if (error) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: colors.error, textAlign: 'center' }}>Error: {error}</Text>
-        <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 10 }}>
+        <Text style={[typography.body, { color: colors.error, textAlign: 'center' }]}>Error: {error}</Text>
+        <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 10 }]}>
           Please check your internet connection or try logging in again.
         </Text>
       </View>
@@ -65,7 +68,7 @@ const HomeScreen = () => {
       <AddTaskButton addTask={addTask} />
     </View>
   );
-}
+};
 
 export default HomeScreen;
 

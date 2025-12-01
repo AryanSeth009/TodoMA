@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Modal, ScrollView, Platform, Alert } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useTheme } from '@/hooks/useTheme';
-import { useTaskStore } from '@/store/taskStore';
+import { useTaskStore, TASK_COLORS } from '@/store/taskStore'; // Import TASK_COLORS
 import { X, Clock } from 'lucide-react-native';
-import { colors } from '@/styles/colors';
+import { createTypography } from '../styles/typography';
 
 type AddTaskModalProps = {
   isVisible: boolean;
@@ -13,7 +13,8 @@ type AddTaskModalProps = {
 };
 
 export default function AddTaskModal({ isVisible, onClose, isScheduled = false }: AddTaskModalProps) {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const addTask = useTaskStore((state) => state.addTask);
   const addScheduledTask = useTaskStore((state) => state.addScheduledTask);
   
@@ -24,7 +25,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
   const [endTimeText, setEndTimeText] = useState('');
   const [startAmPm, setStartAmPm] = useState('AM');
   const [endAmPm, setEndAmPm] = useState('AM');
-  const [selectedColor, setSelectedColor] = useState(colors.categoryPeach);
+  const [selectedColor, setSelectedColor] = useState(colors.primary);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [manualTimeInput, setManualTimeInput] = useState(false);
@@ -76,13 +77,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
     }
   };
   
-  const colorOptions = [
-    colors.categoryPeach,
-    colors.categoryMint,
-    colors.categoryLavender,
-    colors.categoryBlue,
-    colors.categoryPink,
-  ];
+  const colorOptions = TASK_COLORS; // Use TASK_COLORS for color options
 
   const validateTimes = () => {
     let start = startDate;
@@ -129,7 +124,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
       startTime: manualTimeInput ? `${startTimeText} ${startAmPm}` : formatTime(startDate),
       endTime: manualTimeInput ? `${endTimeText} ${endAmPm}` : formatTime(endDate),
       team: [],
-      color: selectedColor,
+      color: selectedColor === colors.primary ? getNextTaskColor(TASK_COLORS) : selectedColor, // Use selectedColor or get next color
       progress: 0,
       daysRemaining: 7,
       categoryId: 'default'
@@ -140,9 +135,9 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
         ...newTask,
         time: manualTimeInput ? `${startTimeText} ${startAmPm}` : formatTime(startDate),
         hasCall: false,
-      });
+      }, TASK_COLORS); // Pass TASK_COLORS
     } else {
-      addTask(newTask);
+      addTask(newTask, TASK_COLORS); // Pass TASK_COLORS
     }
 
     const handleClose = () => {
@@ -161,7 +156,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
       setEndTimeText(hourAfterTime.split(' ')[0]); // Just the time part
       setStartAmPm(nextHourTime.includes('PM') ? 'PM' : 'AM');
       setEndAmPm(hourAfterTime.includes('PM') ? 'PM' : 'AM');
-      setSelectedColor(colors.categoryPeach);
+      setSelectedColor(colors.primary); // Use primary color as initial selected color
       setShowStartPicker(false);
       setShowEndPicker(false);
       setManualTimeInput(false);
@@ -184,6 +179,96 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    timeHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    timeToggle: {
+      padding: 4,
+    },
+    timeInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+      position: 'relative',
+    },
+    timeInput: {
+      height: 48,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      flex: 1,
+    },
+    amPmContainer: {
+      flexDirection: 'row',
+      marginLeft: 8,
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    amPmButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: colors.card,
+    },
+    amPmText: {
+
+    },
+    timeIcon: {
+      position: 'absolute',
+      right: 16,
+    },
+    modalContent: {
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 24,
+      minHeight: '70%',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    form: {
+      flex: 1,
+    },
+    input: {
+      height: 48,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      marginBottom: 16,
+    },
+    colorOptions: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 8,
+      marginBottom: 24,
+    },
+    colorOption: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+    },
+    selectedColor: {
+      borderWidth: 2,
+      borderColor: colors.primary,
+    },
+    submitButton: {
+      height: 48,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 24,
+    },
+  }), [colors]); // Recreate styles if colors change
+
   return (
     <Modal
       visible={isVisible}
@@ -192,7 +277,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+        <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
           <View style={styles.header}>
             <Text style={[typography.heading, { color: colors.textPrimary }]}>
               Add New Task
@@ -208,6 +293,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
             </Text>
             <TextInput
               style={[
+                typography.body, // Apply typography.body
                 styles.input,
                 { 
                   backgroundColor: colors.inputBackground,
@@ -238,6 +324,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
               <View style={styles.timeInputContainer}>
                 <TextInput
                   style={[
+                    typography.body, // Apply typography.body
                     styles.timeInput,
                     { 
                       backgroundColor: colors.inputBackground,
@@ -259,8 +346,9 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
                     onPress={() => setStartAmPm('AM')}
                   >
                     <Text style={[
+                      typography.small, // Apply typography.small
                       styles.amPmText, 
-                      startAmPm === 'AM' && { color: colors.white }
+                      startAmPm === 'AM' && { color: colors.onPrimary }
                     ]}>AM</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
@@ -271,8 +359,9 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
                     onPress={() => setStartAmPm('PM')}
                   >
                     <Text style={[
+                      typography.small, // Apply typography.small
                       styles.amPmText, 
-                      startAmPm === 'PM' && { color: colors.white }
+                      startAmPm === 'PM' && { color: colors.onPrimary }
                     ]}>PM</Text>
                   </TouchableOpacity>
                 </View>
@@ -289,7 +378,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
                   }
                 ]}
               >
-                <Text style={{ color: colors.textPrimary }}>
+                <Text style={[typography.body, { color: colors.textPrimary }]}> 
                   {formatTime(startDate)}
                 </Text>
               </TouchableOpacity>
@@ -314,6 +403,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
                   <View style={styles.timeInputContainer}>
                     <TextInput
                       style={[
+                        typography.body, // Apply typography.body
                         styles.timeInput,
                         { 
                           backgroundColor: colors.inputBackground,
@@ -335,8 +425,9 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
                         onPress={() => setEndAmPm('AM')}
                       >
                         <Text style={[
+                          typography.small, 
                           styles.amPmText, 
-                          endAmPm === 'AM' && { color: colors.white }
+                          endAmPm === 'AM' && { color: colors.onPrimary }
                         ]}>AM</Text>
                       </TouchableOpacity>
                       <TouchableOpacity 
@@ -347,8 +438,9 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
                         onPress={() => setEndAmPm('PM')}
                       >
                         <Text style={[
+                          typography.small, // Apply typography.small
                           styles.amPmText, 
-                          endAmPm === 'PM' && { color: colors.white }
+                          endAmPm === 'PM' && { color: colors.onPrimary }
                         ]}>PM</Text>
                       </TouchableOpacity>
                     </View>
@@ -365,7 +457,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
                       }
                     ]}
                   >
-                    <Text style={{ color: colors.textPrimary }}>
+                    <Text style={[typography.body, { color: colors.textPrimary }]}>
                       {formatTime(endDate)}
                     </Text>
                   </TouchableOpacity>
@@ -404,7 +496,7 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
               style={[styles.submitButton, { backgroundColor: colors.primary }]}
               onPress={handleSubmit}
             >
-              <Text style={[typography.buttonText, { color: colors.white }]}>
+              <Text style={[typography.buttonText, { color: colors.white }]}> 
                 Add Task
               </Text>
             </TouchableOpacity>
@@ -414,96 +506,3 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  timeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  timeToggle: {
-    padding: 4,
-  },
-  timeInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    position: 'relative',
-  },
-  timeInput: {
-    height: 48,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    flex: 1,
-    fontSize: 16,
-  },
-  amPmContainer: {
-    flexDirection: 'row',
-    marginLeft: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  amPmButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  amPmText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  timeIcon: {
-    position: 'absolute',
-    right: 16,
-  },
-  modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    minHeight: '70%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  form: {
-    flex: 1,
-  },
-  input: {
-    height: 48,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  colorOptions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  colorOption: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  selectedColor: {
-    borderWidth: 2,
-    borderColor: colors.dark,
-  },
-  submitButton: {
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-});

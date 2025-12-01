@@ -54,9 +54,9 @@ export const AddTask = ({ onClose }: { onClose: () => void }) => {
         createdAt: new Date().toISOString(),
         team: [],
         progress: 0,
-        color: colors.categoryPeach,
+        color: getNextTaskColor(TASK_COLORS), // Assign color dynamically
         daysRemaining: 7,
-      });
+      }, TASK_COLORS);
 
       setTitle('');
       setDescription('');
@@ -180,7 +180,7 @@ export const AddTask = ({ onClose }: { onClose: () => void }) => {
         {isLoading ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text style={styles.addButtonText}>Add Task</Text>
+          <Text style={[styles.addButtonText, { color: colors.textPrimary }]}>Add Task</Text>
         )}
       </TouchableOpacity>
     </ScrollView>
@@ -265,6 +265,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    color: '#FFFFFF',
   },
   addButtonText: {
     color: '#FFFFFF',

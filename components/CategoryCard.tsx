@@ -1,14 +1,17 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Category } from '@/types/category';
+import { useMemo } from 'react';
+import { createTypography } from '../styles/typography';
 
 type CategoryCardProps = {
   category: Category;
 };
 
 export default function CategoryCard({ category }: CategoryCardProps) {
-  const { colors, typography } = useTheme();
-  const { name, taskCount, color, image } = category;
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
+  const { name, ount, color, image } = category;
 
   return (
     <TouchableOpacity
@@ -20,7 +23,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
           {name}
         </Text>
         <Text style={[typography.cardSubtitle, styles.subtitle]}>
-          {taskCount.toString().padStart(2, '0')} Tasks
+          {ount.toString().padStart(2, '0')} Tasks
         </Text>
       </View>
       <Image 
@@ -45,11 +48,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   title: {
-    color: '#000',
+    color: colors.textPrimary, // Use theme color
     opacity: 0.8,
   },
   subtitle: {
-    color: '#000',
+    color: colors.textSecondary, // Use theme color
     opacity: 0.7,
     marginTop: 4,
   },

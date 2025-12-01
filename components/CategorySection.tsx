@@ -3,9 +3,12 @@ import { useTheme } from '@/hooks/useTheme';
 import CategoryCard from './CategoryCard';
 import { Plus } from 'lucide-react-native';
 import { categories } from '@/data/categoryData';
+import { useMemo } from 'react';
+import { createTypography } from '../styles/typography';
 
 export default function CategorySection() {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
 
   return (
     <View style={styles.container}>

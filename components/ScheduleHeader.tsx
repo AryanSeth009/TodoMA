@@ -5,9 +5,11 @@ import { Avatar } from './Avatar';
 import { useTaskStore } from '@/store/taskStore';
 import { useState, useMemo } from 'react';
 import { goBack } from 'expo-router/build/global-state/routing';
+import { createTypography } from '../styles/typography';
 
 export default function ScheduleHeader() {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const user = useTaskStore((state) => state.user);
   const selectedDate = useTaskStore((state) => state.selectedDate);
   const setSelectedDate = useTaskStore((state) => state.setSelectedDate);
@@ -126,7 +128,7 @@ export default function ScheduleHeader() {
         <TouchableOpacity
           style={[
             styles.calendarButton,
-            { backgroundColor: colors.secondaryLight }
+            { backgroundColor: colors.onPrimary }
           ]}
           onPress={toggleCalendar}
         >
@@ -187,7 +189,7 @@ export default function ScheduleHeader() {
                   >
                     <Text style={[
                       styles.dayName,
-                      { color: isSelected ? '#fff' : colors.textSecondary }
+                      { color: isSelected ? '#fff' : colors.textPrimary }
                     ]}>
                       {item.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 3)}
                     </Text>
@@ -195,7 +197,7 @@ export default function ScheduleHeader() {
                       styles.dayNumber,
                       { 
                         color: isSelected ? '#fff' : colors.textPrimary,
-                        fontWeight: isCurrentDay ? 'bold' : 'normal'
+                        fontFamily: isCurrentDay ? colors.fontFamily.bold : colors.fontFamily.regular,
                       }
                     ]}>
                       {item.getDate()}
@@ -208,13 +210,13 @@ export default function ScheduleHeader() {
             
             {/* Today button */}
             <TouchableOpacity 
-              style={[styles.todayButton, { backgroundColor: colors.secondaryLight }]}
+              style={[styles.todayButton, { backgroundColor: colors.secondary }]}
               onPress={() => {
                 goToToday();
                 setCalendarVisible(false);
               }}
             >
-              <Text style={[typography.buttonText, { color: colors.secondary }]}>
+              <Text style={[typography.buttonText, { color: colors.onPrimary }]}>
                 Go to Today
               </Text>
             </TouchableOpacity>

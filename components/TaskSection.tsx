@@ -3,10 +3,12 @@ import { useTheme } from '@/hooks/useTheme';
 import TaskCard from './TaskCard';
 import { ChevronRight, RefreshCw } from 'lucide-react-native';
 import { useTaskStore } from '@/store/taskStore';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { createTypography } from '../styles/typography';
 
 export default function TaskSection() {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const tasks = useTaskStore((state) => state.tasks);
   const isLoading = useTaskStore((state) => state.isLoading);
   const error = useTaskStore((state) => state.error);

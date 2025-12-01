@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "MyNewApp",
-    "slug": "MyNewApp",
+    "name": "TodoMA",
+    "slug": "TodoMA",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "mynewapp",
+    "scheme": "TodoMA",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mynewapp"
+      "bundleIdentifier": "com.TodoMA"
     },
     "android": {
-      "package": "com.mynewapp",
+      "package": "com.TodoMA",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

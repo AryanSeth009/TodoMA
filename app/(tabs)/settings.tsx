@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useTaskStore } from '@/store/taskStore';
 import { useRouter } from 'expo-router';
+import { createTypography } from '../../styles/typography';
+// import History from '../../components/History'; // Removed unnecessary import
 
 export default function SettingsScreen() {
   const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const router = useRouter();
   const logout = useTaskStore((state) => state.logout);
 
@@ -17,33 +20,31 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.textPrimary }]}>Settings</Text>
+      <Text style={[typography.heading, styles.title, { color: colors.textPrimary }]}>Settings</Text>
       
       <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+        <Text style={[typography.sectionTitle, styles.sectionTitle, { color: colors.textSecondary }]}>
           Appearance
         </Text>
         <ThemeToggle />
       </View>
 
 
-      <View style={[styles.section, { backgroundColor: colors.card }]}>
-       <TouchableOpacity>
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+      <TouchableOpacity onPress={() => router.push('/history')} style={[styles.section, { backgroundColor: colors.card }]}>
+       <Text style={[styles.historyText,  { color: colors.textSecondary }]}>
             History
           </Text>
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
 
       <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+        <Text style={[typography.sectionTitle, styles.sectionTitle, { color: colors.textSecondary }]}>
           Account
         </Text>
         <TouchableOpacity
           onPress={handleLogout}
           style={[styles.logoutButton, { backgroundColor: colors.error }]}
         >
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={[typography.buttonText, styles.logoutText, { color: colors.onPrimary }]}>Logout</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -56,8 +57,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    // fontSize: 32, // Removed, handled by typography.heading
+    // fontWeight: 'bold', // Removed, handled by typography.heading
     marginBottom: 24,
     marginTop: 60,
   },
@@ -67,8 +68,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
+    // fontSize: 16, // Removed, handled by typography.sectionTitle
+    // fontWeight: '500', // Removed, handled by typography.sectionTitle
     marginBottom: 16,
   },
   logoutButton: {
@@ -77,8 +78,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutText: {
-    color: '#FFFFFF',
+    // color: '#FFFFFF', // Removed, handled by typography.buttonText
+    // fontSize: 16, // Removed, handled by typography.buttonText
+    // fontWeight: '600', // Removed, handled by typography.buttonText
+  },
+  historyText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    fontFamily: 'Poppins-regular',
+   
   },
 });

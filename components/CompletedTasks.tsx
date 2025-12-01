@@ -1,12 +1,14 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useTaskStore } from '@/store/taskStore';
-import TaskCard from './TaskCard';
-import { useEffect } from 'react';
+import TaskCard from './TaskCard'; // Corrected import from ard to TaskCard
+import { useEffect, useMemo } from 'react';
 import { RefreshCw } from 'lucide-react-native';
+import { createTypography } from '../styles/typography';
 
 export default function CompletedTasks() {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
+  const typography = useMemo(() => createTypography(colors), [colors]);
   const completedTasks = useTaskStore((state) => state.completedTasks);
   const syncTasksWithBackend = useTaskStore((state) => state.syncTasksWithBackend);
   const isLoading = useTaskStore((state) => state.isLoading);
