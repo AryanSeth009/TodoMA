@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { createTypography } from '@/styles/typography';
 import { Avatar } from '@/components/Avatar';
 import { Streak } from '@/types/streak';
+import { goBack } from 'expo-router/build/global-state/routing';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 // import Animated, { useSharedValue, withSpring, withSequence, withTiming } from 'react-native-reanimated';
 // import FlameIcon from '@/assets/icons/flame.png'; // Example for animated flame
 
@@ -30,6 +32,20 @@ const ProfileHeader = ({ user, streak }: ProfileHeaderProps) => {
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
+     <View style={styles.leftSection}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={goBack}
+        >
+          <ChevronLeft size={32} color={colors.textPrimary} />
+        </TouchableOpacity>
+        
+       
+        
+       
+      </View>
+
+      
       <View style={styles.avatarContainer}>
         <Avatar
           seed={user?.email || 'guest'}
@@ -57,6 +73,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     padding: 24,
+    paddingTop: 0,
     alignItems: 'center',
     marginBottom: 16,
     // Add soft shadow styles here
@@ -88,5 +105,20 @@ const styles = StyleSheet.create({
   tagline: {
     fontStyle: 'italic',
     marginBottom: 16,
+  },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  backButton: {
+    marginRight: 16,
+    padding: 4,
+    right:24
+  },
+  nextButton: {
+    marginLeft: 12,
+    padding: 4,
   },
 });

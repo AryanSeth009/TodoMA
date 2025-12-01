@@ -50,7 +50,7 @@ export default function DateSelector() {
                 style={[
                   styles.dateItem,
                   isSelected && {
-                    backgroundColor: colors.secondary, // Use primary color for selected background
+                    backgroundColor: colors.primary, // Use primary color for selected background
                   }
                 ]}
               >

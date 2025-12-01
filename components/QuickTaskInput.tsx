@@ -5,12 +5,15 @@ import { useTaskStore, TASK_COLORS } from '@/store/taskStore'; // Import TASK_CO
 import { Plus } from 'lucide-react-native';
 import { createTypography } from '../styles/typography';
 
+
+
 export default function QuickTaskInput() {
   const { colors } = useTheme();
   const typography = useMemo(() => createTypography(colors), [colors]);
   const [taskTitle, setTaskTitle] = useState('');
   const addQuickTask = useTaskStore((state) => state.addQuickTask);
-  const getNextTaskColor = useTaskStore((state) => state.getNextTaskColor); // Get getNextTaskColor
+  // const taskColors = useTaskStore((state) => state.TASK_COLORS); // This line is not needed, TASK_COLORS is directly imported
+  // const getNextTaskColor = useTaskStore((state) => state.getNextTaskColor); // Removed this line
 
   const handleAddTask = () => {
     if (!taskTitle.trim()) return;
@@ -21,7 +24,7 @@ export default function QuickTaskInput() {
       completed: false,
       team: [],
       progress: 0,
-      color: getNextTaskColor(TASK_COLORS), // Assign color dynamically
+      // color: getNextTaskColor(TASK_COLORS), // This line will be handled by addTask internally
       daysRemaining: 0,
       categoryId: 'quick',
       createdAt: new Date().toISOString(),

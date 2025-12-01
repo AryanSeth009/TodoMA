@@ -40,7 +40,7 @@ export default function ProfileScreen() {
       {/* <ProductivityStatsDashboard tasks={tasks} completedTasks={completedTasks} categories={categories} /> */}
       <HabitsRoutineSection habitStats={habitStats} />
       <AchievementsBadgesGrid achievementStats={achievementStats} />
-      <RankingLeaderboardInsight rankingStats={rankingStats} />
+      {/* <RankingLeaderboardInsight rankingStats={rankingStats} /> */}
       {/* <JourneyTimeline journeyTimeline={journeyTimeline} />
       <StreakProtectionCard streak={streak} />
       <ConnectedAccountsSection connectedAccounts={connectedAccounts} />

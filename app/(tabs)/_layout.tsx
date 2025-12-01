@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
-import { Calendar, ListTodo, Settings, Flame, View } from 'lucide-react-native'; // Import Flame icon
+import { Calendar, ListTodo, Settings, Flame } from 'lucide-react-native'; // Import Flame icon
 
 export default function TabLayout() {
   const { colors } = useTheme();
@@ -37,10 +37,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="streaks" // New tab for streaks
+        name="settings" // New tab for streaks
         options={{
-          title: 'Streaks',
-          tabBarIcon: ({ color }) => <Flame size={24} color={color} />,
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
         }}
       />
     </Tabs>

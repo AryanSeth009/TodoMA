@@ -1,9 +1,13 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTaskStore } from '@/store/taskStore'; // Import useTaskStore
 import { useTheme } from '@/hooks/useTheme';
 import { createTypography } from '@/styles/typography';
 import TaskCard from '@/components/TaskCard'; // Assuming you have a TaskCard component
+
+import { goBack } from 'expo-router/build/global-state/routing';
+import { ChevronLeft } from 'lucide-react-native';
+
 
 export default function History() {
   const { colors } = useTheme();
@@ -12,6 +16,18 @@ export default function History() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+         <View style={styles.leftSection}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={goBack}
+        >
+          <ChevronLeft size={32} color={colors.textPrimary} />
+        </TouchableOpacity>
+        
+       
+        
+       
+      </View>
       <Text style={[typography.heading, styles.header, { color: colors.textPrimary }]}>Task History</Text>
       <ScrollView style={styles.card} contentContainerStyle={styles.scrollContent}>
         {historyTasks.length > 0 ? (
@@ -43,5 +59,20 @@ const styles = StyleSheet.create({
   card:{
     marginBottom: 20,
     padding: 10
-  }
+  },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  backButton: {
+    marginRight: 16,
+    padding: 4,
+   
+  },
+  nextButton: {
+    marginLeft: 12,
+    padding: 4,
+  },
 });

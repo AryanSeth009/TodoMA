@@ -10,6 +10,7 @@ const LightThemeColors: ThemeColors = {
   secondary: '#FF6B6B',
   background: '#F8F9FB',
   card: '#FFFFFF',
+  surface: '#FFFFFF',
   textPrimary: '#1C1C1E',
   textSecondary: '#6B7280',
   border: '#E5E7EB',
@@ -20,7 +21,7 @@ const LightThemeColors: ThemeColors = {
   warning: '#FACC15',
   onPrimary: '#FFFFFF',
   white: '#FFFFFF',
-  olors: [
+  colors: [
   
   '#CDE26D',
   '#F5D557',
@@ -55,6 +56,7 @@ const DarkThemeColors: ThemeColors = {
   secondary: '#FF6B6B',
   background: '#000000',
   card: '#1C1C1E',
+  surface: '#1C1C1E',
   textPrimary: '#FFFFFF',
   textSecondary: '#8E8E93',
   border: '#38383A',
@@ -63,7 +65,8 @@ const DarkThemeColors: ThemeColors = {
   success: '#32D74B',
   warning: '#FFD60A',
   onPrimary: '#FFFFFF',
-  olors: [
+  white: '#FFFFFF',
+  colors: [
     '#704242', // Darker Red
     '#2D572C', // Darker Green
     '#1A3E5C', // Darker Blue

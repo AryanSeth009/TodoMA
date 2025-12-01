@@ -32,7 +32,7 @@ interface TaskState {
   // Task management
   addTask: (task: Omit<Task, 'id' | 'color'>, taskColors: string[]) => Promise<void>;
   addScheduledTask: (task: Omit<ScheduledTask, 'id' | 'color'> & { time: string, hasCall: boolean }, taskColors: string[]) => Promise<void>;
-  addQuickTask: (task: Task) => Promise<void>;
+  addQuickTask: (task: Omit<Task, 'color'>, taskColors: string[]) => Promise<void>;
   completeTask: (taskId: string) => Promise<Task | undefined>;
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
   updateScheduledTask: (taskId: string, updates: Partial<ScheduledTask>) => Promise<void>;
@@ -259,8 +259,8 @@ export const useTaskStore = create<TaskState>()(
           }
         },
 
-        addQuickTask: async (task: Task) => {
-          const taskToCreate: Partial<Task> = { ...task, quick: true, completed: false };
+        addQuickTask: async (task: Omit<Task, 'color'>, taskColors: string[]) => {
+          const taskToCreate: Partial<Task> = { ...task, quick: true, completed: false, color: getNextTaskColor(taskColors) };
           // if (task.startTime) taskToCreate.startTime = task.startTime;
           // if (task.endTime) taskToCreate.endTime = task.endTime;
           const newTask = await api.createTask(taskToCreate as Omit<Task, 'id'>);

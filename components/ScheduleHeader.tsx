@@ -6,6 +6,7 @@ import { useTaskStore } from '@/store/taskStore';
 import { useState, useMemo } from 'react';
 import { goBack } from 'expo-router/build/global-state/routing';
 import { createTypography } from '../styles/typography';
+import { router } from 'expo-router';
 
 export default function ScheduleHeader() {
   const { colors } = useTheme();
@@ -89,6 +90,9 @@ export default function ScheduleHeader() {
     setSelectedDate(date.getTime());
     setCalendarVisible(false);
   };
+  const handleProfile = () => {
+    router.push('/profile');
+  };
 
   return (
     <View style={styles.container}>
@@ -134,11 +138,13 @@ export default function ScheduleHeader() {
         >
           <Calendar size={20} color={colors.secondary} />
         </TouchableOpacity>
-        <Avatar
+       <TouchableOpacity onPress={handleProfile}>
+       <Avatar 
           seed={user?.email || 'guest'}
           size={40}
           style={styles.avatar}
         />
+       </TouchableOpacity>
       </View>
       
       {/* Calendar Modal */}
@@ -210,7 +216,7 @@ export default function ScheduleHeader() {
             
             {/* Today button */}
             <TouchableOpacity 
-              style={[styles.todayButton, { backgroundColor: colors.secondary }]}
+              style={[styles.todayButton, { backgroundColor: colors.primary }]}
               onPress={() => {
                 goToToday();
                 setCalendarVisible(false);
