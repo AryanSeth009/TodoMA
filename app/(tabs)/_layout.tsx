@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
-import { Calendar, ListTodo, Settings, Flame } from 'lucide-react-native'; // Import Flame icon
+import { Calendar, ListTodo, Settings, Flame, Users } from 'lucide-react-native'; // Import Flame icon and Users icon
 
 export default function TabLayout() {
   const { colors } = useTheme();
@@ -36,11 +36,25 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
         }}
       />
+     
       <Tabs.Screen
         name="settings" // New tab for streaks
         options={{
           title: 'Settings',
           tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="social"
+        options={{
+          title: 'Social',
+          tabBarIcon: ({ color }) => <Users size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="team-settings"
+        options={{
+          href: null, // Hide this tab from the tab bar
         }}
       />
     </Tabs>

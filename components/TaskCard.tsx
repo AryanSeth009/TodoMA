@@ -5,7 +5,7 @@ import TeamAvatars from './TeamAvatars';
 import { Clock, CheckCircle2, Circle } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useTaskStore } from '@/store/taskStore';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createTypography } from '../styles/typography';
 
 type TaskCardProps = {
@@ -28,6 +28,9 @@ export default function TaskCard({ task }: TaskCardProps) {
   // For debugging
   console.log('Task ID:', task.id, 'Task:', task);
   
+
+
+
   const handleTaskCompletion = async () => {
     // Debug log the task object
     console.log('Attempting to complete task:', {

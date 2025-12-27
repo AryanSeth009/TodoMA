@@ -14,7 +14,7 @@ export default function SearchBar() {
       <View 
         style={[
           styles.searchContainer,
-          { backgroundColor: colors.background }
+          { backgroundColor: colors.white }
         ]}
       >
         <Search size={20} color={colors.textSecondary} style={styles.searchIcon} />
@@ -25,7 +25,7 @@ export default function SearchBar() {
           value={searchText}
           onChangeText={setSearchText}
         />
-      </View>
+      </View> 
       <TouchableOpacity
         style={[styles.filterButton, { backgroundColor: colors.black }]}
         activeOpacity={0.7}

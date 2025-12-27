@@ -46,3 +46,16 @@ export const colors = {
   categoryBlue: '#E0F2FF',
   categoryPink: '#FFE6F0',
 };
+
+export const taskCardColors = [
+  '#FFC0CB', // Pink
+  '#ADD8E6', // LightBlue
+  '#90EE90', // LightGreen
+  '#FFD700', // Gold
+  '#FFA07A', // LightSalmon
+  '#DA70D6', // Orchid
+  '#20B2AA', // LightSeaGreen
+  '#87CEFA', // LightSkyBlue
+  '#DDA0DD', // Plum
+  '#FFDEAD', // NavajoWhite
+];

@@ -10,13 +10,17 @@ type AddTaskModalProps = {
   isVisible: boolean;
   onClose: () => void;
   isScheduled?: boolean;
+  isSharedTask?: boolean; // New prop for shared tasks
+  currentUserRole?: 'Admin' | 'Member' | 'Viewer' | 'Guest'; // New prop for current user's role
+  selectedTeamId?: string; // New prop for the currently selected team ID
 };
 
-export default function AddTaskModal({ isVisible, onClose, isScheduled = false }: AddTaskModalProps) {
+export default function AddTaskModal({ isVisible, onClose, isScheduled = false, isSharedTask = false, currentUserRole, selectedTeamId }: AddTaskModalProps) {
   const { colors } = useTheme();
   const typography = useMemo(() => createTypography(colors), [colors]);
   const addTask = useTaskStore((state) => state.addTask);
   const addScheduledTask = useTaskStore((state) => state.addScheduledTask);
+  const addSharedTask = useTaskStore((state) => state.addSharedTask); // Add addSharedTask to useTaskStore
   
   const [title, setTitle] = useState('');
   const [startDate, setStartDate] = useState(new Date());
@@ -29,6 +33,10 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [manualTimeInput, setManualTimeInput] = useState(false);
+  const [owner, setOwner] = useState<string>(''); // New state for task owner
+  const [deadline, setDeadline] = useState<Date | undefined>(undefined); // New state for deadline
+  const [showDeadlinePicker, setShowDeadlinePicker] = useState(false); // State for deadline picker visibility
+  const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM'); // New state for priority
 
   const formatTime = (date: Date) => {
     const hours = date.getHours();
@@ -130,14 +138,24 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
       categoryId: 'default'
     };
 
-    if (isScheduled) {
+    if (isSharedTask) {
+      // Call addSharedTask for shared tasks
+      addSharedTask({
+        ...newTask,
+        owner: { id: 'currentUserId', name: owner, email: 'currentUser@example.com' }, // Placeholder for owner object
+        deadline,
+        priority,
+        teamId: selectedTeamId, // Pass the actual selectedTeamId
+      }, TASK_COLORS);
+    } else if (isScheduled) {
       addScheduledTask({
         ...newTask,
         time: manualTimeInput ? `${startTimeText} ${startAmPm}` : formatTime(startDate),
         hasCall: false,
+        teamId: selectedTeamId, // Pass teamId for scheduled tasks
       }, TASK_COLORS); // Pass TASK_COLORS
     } else {
-      addTask(newTask, TASK_COLORS); // Pass TASK_COLORS
+      addTask({...newTask, teamId: selectedTeamId}, TASK_COLORS); // Pass teamId for regular tasks
     }
 
     const handleClose = () => {
@@ -160,6 +178,9 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
       setShowStartPicker(false);
       setShowEndPicker(false);
       setManualTimeInput(false);
+      setOwner(''); // Reset owner
+      setDeadline(undefined); // Reset deadline
+      setPriority('MEDIUM'); // Reset priority
       onClose();
     };
     handleClose();
@@ -266,6 +287,16 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 24,
+    },
+    priorityContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: 16,
+    },
+    priorityButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 8,
     },
   }), [colors]); // Recreate styles if colors change
 
@@ -475,6 +506,85 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
               </>
             )}
 
+            {isSharedTask && ( // Render owner, deadline, and priority only for shared tasks
+              <>
+                <Text style={[typography.label, { color: colors.textPrimary, marginTop: 16 }]}>
+                  Task Owner
+                </Text>
+                <TextInput
+                  style={[
+                    typography.body,
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      color: colors.textPrimary
+                    }
+                  ]}
+                  value={owner}
+                  onChangeText={setOwner}
+                  placeholder="Assign task owner"
+                  placeholderTextColor={colors.textSecondary}
+                />
+
+                <Text style={[typography.label, { color: colors.textPrimary, marginTop: 16 }]}>
+                  Deadline
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowDeadlinePicker(true)}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      justifyContent: 'center'
+                    }
+                  ]}
+                >
+                  <Text style={[typography.body, { color: colors.textPrimary }]}>
+                    {deadline ? deadline.toLocaleDateString() : 'Select Deadline'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showDeadlinePicker && (
+                  <DateTimePicker
+                    value={deadline || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                      setShowDeadlinePicker(false);
+                      if (selectedDate) {
+                        setDeadline(selectedDate);
+                      }
+                    }}
+                  />
+                )}
+
+                <Text style={[typography.label, { color: colors.textPrimary, marginTop: 16 }]}>
+                  Priority
+                </Text>
+                <View style={styles.priorityContainer}>
+                  {(['LOW', 'MEDIUM', 'HIGH'] as const).map((level) => (
+                    <TouchableOpacity
+                      key={level}
+                      style={[
+                        styles.priorityButton,
+                        { backgroundColor: priority === level ? colors.primary : colors.card }, // Use theme primary color
+                      ]}
+                      onPress={() => setPriority(level)}
+                    >
+                      <Text
+                        style={[
+                          typography.small,
+                          { color: priority === level ? colors.white : colors.textPrimary }, // Use theme white and textPrimary
+                        ]}
+                      >
+                        {level}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+
             <Text style={[typography.label, { color: colors.textPrimary }]}>
               Color
             </Text>
@@ -495,14 +605,26 @@ export default function AddTaskModal({ isVisible, onClose, isScheduled = false }
             <TouchableOpacity
               style={[styles.submitButton, { backgroundColor: colors.primary }]}
               onPress={handleSubmit}
+              disabled={currentUserRole === 'Viewer' || currentUserRole === 'Guest'}
             >
               <Text style={[typography.buttonText, { color: colors.white }]}> 
                 Add Task
               </Text>
             </TouchableOpacity>
+            {(currentUserRole === 'Viewer' || currentUserRole === 'Guest') && (
+              <Text style={[{ color: colors.error, textAlign: 'center', marginTop: -10, marginBottom: 10 }]}>
+                You do not have permission to add tasks.
+              </Text>
+            )}
           </ScrollView>
         </View>
       </View>
     </Modal>
   );
 }
+
+const getNextTaskColor = (colorsArray: string[]) => {
+  const currentTasks = useTaskStore.getState().tasks;
+  const nextIndex = currentTasks.length % colorsArray.length;
+  return colorsArray[nextIndex];
+};

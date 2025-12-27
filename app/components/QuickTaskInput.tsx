@@ -3,6 +3,7 @@ import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-nativ
 import { useTheme } from '@/hooks/useTheme';
 import { Task } from '../../types/task';
 import { Plus } from 'lucide-react-native';
+import { taskCardColors } from '../../styles/colors'; // Import taskCardColors
 
 interface QuickTaskInputProps {
   addTask: (task: Partial<Task>) => Promise<void>;
@@ -16,7 +17,7 @@ const QuickTaskInput: React.FC<QuickTaskInputProps> = ({ addTask }) => {
     if (taskTitle.trim()) {
       await addTask({
         title: taskTitle.trim(),
-        color: '#00C0FF', // Default color for quick tasks
+        color: taskCardColors[Math.floor(Math.random() * taskCardColors.length)], // Random color for quick tasks
         progress: 0,
         daysRemaining: 1, // Quick tasks often due today/soon
         categoryId: 'quick', // Special category for quick tasks

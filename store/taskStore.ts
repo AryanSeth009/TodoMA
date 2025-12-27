@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Task, ScheduledTask, TeamMember } from '@/types/task';
+import { Task, ScheduledTask, TeamMember, Comment } from '@/types/task';
 import { Category } from '@/types/category';
 import { api, getApiService } from '@/services/api'; // Import getApiService
 import { useStreakStore, getStartOfDay } from '@/store/streakStore'; // Import getStartOfDay
@@ -23,6 +23,8 @@ interface TaskState {
   quickTasks: Task[];
   historyTasks: Task[]; // New: for tasks moved from completed after 24 hours
   categories: Category[];
+  teams: Team[]; // New: Add teams array
+  pendingInvitations: TeamInvitation[]; // New: Add pendingInvitations array
   selectedDate: number;
   isAuthenticated: boolean;
   user: { email: string; name: string; avatar?: string } | null;
@@ -30,18 +32,31 @@ interface TaskState {
   error: string | null;
 
   // Task management
-  addTask: (task: Omit<Task, 'id' | 'color'>, taskColors: string[]) => Promise<void>;
-  addScheduledTask: (task: Omit<ScheduledTask, 'id' | 'color'> & { time: string, hasCall: boolean }, taskColors: string[]) => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'color'> & { teamId?: string }, taskColors: string[]) => Promise<void>;
+  addScheduledTask: (task: Omit<ScheduledTask, 'id' | 'color' | 'team'> & { time: string, hasCall: boolean; teamId?: string }, taskColors: string[]) => Promise<void>;
   addQuickTask: (task: Omit<Task, 'color'>, taskColors: string[]) => Promise<void>;
+  addSharedTask: (task: Omit<Task, 'id' | 'color'> & { owner: TeamMember | undefined; deadline: Date | undefined; priority: 'LOW' | 'MEDIUM' | 'HIGH'; teamId: string }, taskColors: string[]) => Promise<void>;
+  addCommentToTask: (taskId: string, comment: Comment) => Promise<void>; // New action to add a comment to a task
+  addAttachmentToTask: (taskId: string, attachment: Omit<Attachment, 'id' | 'uploadedAt'>) => Promise<void>; // New action to add an attachment
+  removeAttachmentFromTask: (taskId: string, attachmentId: string) => Promise<void>; // New action to remove an attachment
   completeTask: (taskId: string) => Promise<Task | undefined>;
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
-  updateScheduledTask: (taskId: string, updates: Partial<ScheduledTask>) => Promise<void>;
+  updateScheduledTask: (taskId: string, updates: Partial<ScheduledTask> & { teamId?: string }) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   deleteScheduledTask: (taskId: string) => Promise<void>;
   cleanupOldTasks: () => Promise<void>;
 
   // Category management
   addCategory: (category: Category) => Promise<void>;
+
+  // Team management
+  createTeam: (teamName: string) => Promise<void>; // New: Add createTeam action
+  updateTeam: (team: Team) => Promise<void>; // New: Add updateTeam action
+  removeTeamMember: (teamId: string, memberId: string) => Promise<void>; // New: Remove team member
+  deleteTeam: (teamId: string) => Promise<void>; // New: Delete team
+  inviteTeamMember: (teamId: string, email: string) => Promise<void>; // New: Add inviteTeamMember action
+  acceptTeamInvitation: (invitationId: string, teamId: string) => Promise<void>; // New: Accept team invitation
+  rejectTeamInvitation: (invitationId: string, teamId: string) => Promise<void>; // New: Reject team invitation
 
   // UI state
   setSelectedDate: (date: number) => void;
@@ -111,13 +126,15 @@ export const useTaskStore = create<TaskState>()(
         quickTasks: [],
         historyTasks: [], // Initialize historyTasks
         categories: [],
+        teams: [], // Initialize teams array
+        pendingInvitations: [], // Initialize pendingInvitations
         selectedDate: new Date().setHours(0, 0, 0, 0), // Initialize to start of today
         isAuthenticated: false,
         user: null,
         isLoading: false,
         error: null,
 
-        addTask: async (task: Omit<Task, 'id' | 'color'>, taskColors: string[]) => {
+        addTask: async (task: Omit<Task, 'id' | 'color'> & { teamId?: string }, taskColors: string[]) => {
           try {
             set({ isLoading: true, error: null });
             console.log('TaskStore - Starting to add task:', task);
@@ -135,7 +152,9 @@ export const useTaskStore = create<TaskState>()(
               completed: false,
               completedAt: undefined,
               scheduled: false,
+              status: 'To-do', // Set default status for new tasks
               color: getNextTaskColor(taskColors), // Assign a color here
+              teamId: task.teamId, // Assign teamId if provided
             };
 
             console.log('TaskStore - Created temporary task:', tempTask);
@@ -200,7 +219,7 @@ export const useTaskStore = create<TaskState>()(
           }
         },
 
-        addScheduledTask: async (task: Omit<ScheduledTask, 'id' | 'color'> & { time: string, hasCall: boolean }, taskColors: string[]) => {
+        addScheduledTask: async (task: Omit<ScheduledTask, 'id' | 'color' | 'team'> & { time: string, hasCall: boolean; teamId?: string }, taskColors: string[]) => {
           try {
             // Create a proper task object with all required fields
             const taskToCreate = {
@@ -208,7 +227,7 @@ export const useTaskStore = create<TaskState>()(
               description: '',
               startTime: task.time,
               endTime: task.time, // For scheduled tasks, end time is same as start time
-              team: task.team || [],
+              teamId: task.teamId, // Use teamId here
               progress: 0,
               color: getNextTaskColor(taskColors), // Assign a color here
               daysRemaining: 7,
@@ -227,7 +246,7 @@ export const useTaskStore = create<TaskState>()(
               id: newTask.id,
               title: newTask.title,
               time: task.time,
-              team: newTask.team,
+              teamId: newTask.teamId, // Use teamId here
               color: newTask.color,
               hasCall: task.hasCall || false,
               categoryId: newTask.categoryId
@@ -268,6 +287,173 @@ export const useTaskStore = create<TaskState>()(
             quickTasks: [...state.quickTasks, newTask],
             tasks: [...state.tasks, newTask] // Also add to the main tasks array
           }));
+        },
+
+        addSharedTask: async (task: Omit<Task, 'id' | 'color'> & { owner: TeamMember | undefined; deadline: Date | undefined; priority: 'LOW' | 'MEDIUM' | 'HIGH'; teamId: string }, taskColors: string[]) => {
+          try {
+            set({ isLoading: true, error: null });
+            console.log('TaskStore - Starting to add shared task:', task);
+
+            if (!task.title) {
+              console.error('TaskStore - Missing required fields for shared task:', task);
+              throw new Error('Missing required shared task fields');
+            }
+
+            const tempTask: Task = {
+              ...task,
+              id: `temp_${Date.now()}`,
+              completed: false,
+              completedAt: undefined,
+              scheduled: false,
+              status: 'To-do', // Set default status for new shared tasks
+              color: getNextTaskColor(taskColors),
+              owner: task.owner,
+              deadline: task.deadline?.toISOString(), // Convert Date to ISO string
+              priority: task.priority,
+              teamId: task.teamId, // Assign the teamId
+            };
+
+            set((state) => ({
+              tasks: [...state.tasks, tempTask],
+              activeTasks: [...state.activeTasks, tempTask],
+            }));
+
+            try {
+              const createdTask = await api.createTask(tempTask);
+
+              set((state) => ({
+                tasks: state.tasks.map((t: Task) =>
+                  t.id === tempTask.id ? createdTask : t
+                ),
+                activeTasks: state.activeTasks.map((t: Task) =>
+                  t.id === tempTask.id ? createdTask : t
+                ),
+              }));
+            } catch (error) {
+              console.error('TaskStore - Error creating shared task in backend:', error);
+              set((state) => ({
+                tasks: state.tasks.filter((t: Task) => t.id !== tempTask.id),
+                activeTasks: state.activeTasks.filter((t: Task) => t.id !== tempTask.id),
+              }));
+              throw error;
+            }
+          } catch (error) {
+            console.error('TaskStore - Error in addSharedTask:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to add shared task',
+              isLoading: false
+            });
+            throw error;
+          }
+        },
+
+        addCommentToTask: async (taskId: string, comment: Comment) => {
+          try {
+            set({ isLoading: true, error: null });
+            // Optimistically update the UI
+            set((state) => ({
+              tasks: state.tasks.map((task) =>
+                task.id === taskId
+                  ? { ...task, comments: [...(task.comments || []), comment] }
+                  : task
+              ),
+            }));
+
+            // Call the API to add the comment to the backend
+            await api.addCommentToTask(taskId, comment);
+          } catch (error) {
+            console.error('Error adding comment to task:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to add comment to task',
+              isLoading: false,
+            });
+            // Revert optimistic update on error (optional, but good for consistency)
+            set((state) => ({
+              tasks: state.tasks.map((task) =>
+                task.id === taskId
+                  ? { ...task, comments: (task.comments || []).filter(c => c.id !== comment.id) }
+                  : task
+              ),
+            }));
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
+        addAttachmentToTask: async (taskId: string, attachment: Omit<Attachment, 'id' | 'uploadedAt'>) => {
+          try {
+            set({ isLoading: true, error: null });
+
+            const newAttachment: Attachment = {
+              ...attachment,
+              id: `attach_${Date.now()}`,
+              uploadedAt: new Date().toISOString(),
+            };
+
+            // Optimistically update the UI
+            set((state) => ({
+              tasks: state.tasks.map((task) =>
+                task.id === taskId
+                  ? { ...task, attachments: [...(task.attachments || []), newAttachment] }
+                  : task
+              ),
+            }));
+
+            // Call the API to add the attachment to the backend
+            await api.addAttachmentToTask(taskId, newAttachment);
+          } catch (error) {
+            console.error('Error adding attachment to task:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to add attachment to task',
+              isLoading: false,
+            });
+            // Revert optimistic update on error
+            set((state) => ({
+              tasks: state.tasks.map((task) =>
+                task.id === taskId
+                  ? { ...task, attachments: (task.attachments || []).filter(a => a.id !== `attach_${Date.now()}`) }
+                  : task
+              ),
+            }));
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
+        removeAttachmentFromTask: async (taskId: string, attachmentId: string) => {
+          try {
+            set({ isLoading: true, error: null });
+            // Optimistically update the UI
+            set((state) => ({
+              tasks: state.tasks.map((task) =>
+                task.id === taskId
+                  ? { ...task, attachments: (task.attachments || []).filter(a => a.id !== attachmentId) }
+                  : task
+              ),
+            }));
+
+            // Call the API to remove the attachment from the backend
+            await api.removeAttachmentFromTask(taskId, attachmentId);
+          } catch (error) {
+            console.error('Error removing attachment from task:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to remove attachment from task',
+              isLoading: false,
+            });
+            // Revert optimistic update on error
+            set((state) => ({
+              tasks: state.tasks.map((task) =>
+                task.id === taskId
+                  ? { ...task, attachments: [...(task.attachments || []), get().tasks.find(t => t.id === taskId)?.attachments?.find(a => a.id === attachmentId)].filter(Boolean) as Attachment[] }
+                  : task
+              ),
+            }));
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
         },
 
         completeTask: async (taskId: string) => {
@@ -392,6 +578,232 @@ export const useTaskStore = create<TaskState>()(
           set((state) => ({ categories: [...state.categories, newCategory] }));
         },
 
+        createTeam: async (teamName: string) => {
+          try {
+            set({ isLoading: true, error: null });
+            const user = get().user; // Get current user from store
+            if (!user) {
+              throw new Error('User not authenticated');
+            }
+
+            // Create a temporary team object
+            const tempTeam: Team = {
+              id: `temp_team_${Date.now()}`,
+              name: teamName,
+              members: [{ ...user, role: 'Admin' }], // Creator is the Admin
+              owner: { ...user, role: 'Admin' },
+            };
+
+            set((state) => ({ teams: [...state.teams, tempTeam] }));
+
+            // Call API to create the team
+            const createdTeam = await api.createTeam(tempTeam);
+
+            set((state) => ({
+              teams: state.teams.map((t) =>
+                t.id === tempTeam.id ? createdTeam : t
+              ),
+            }));
+          } catch (error) {
+            console.error('Error creating team:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to create team',
+              isLoading: false,
+            });
+            // Revert optimistic update
+            set((state) => ({ teams: state.teams.filter(t => t.id !== `temp_team_${Date.now()}`) }));
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
+        updateTeam: async (updatedTeam: Team) => {
+          try {
+            set({ isLoading: true, error: null });
+            // Optimistically update the UI
+            set((state) => ({
+              teams: state.teams.map((team) =>
+                team.id === updatedTeam.id ? updatedTeam : team
+              ),
+            }));
+
+            // Call API to update the team
+            await api.updateTeam(updatedTeam.id, updatedTeam);
+          } catch (error) {
+            console.error('Error updating team:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to update team',
+              isLoading: false,
+            });
+            // Revert optimistic update on error (optional)
+            set((state) => ({
+              teams: state.teams.map((team) =>
+                team.id === updatedTeam.id ? get().teams.find(t => t.id === updatedTeam.id) || team : team // Revert to previous state if possible
+              ),
+            }));
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
+        removeTeamMember: async (teamId: string, memberId: string) => {
+          try {
+            set({ isLoading: true, error: null });
+            // Optimistically update the UI
+            set((state) => ({
+              teams: state.teams.map((team) =>
+                team.id === teamId
+                  ? { ...team, members: team.members.filter(member => member.id !== memberId) }
+                  : team
+              ),
+            }));
+
+            // Call API to remove member
+            await api.removeTeamMember(teamId, memberId);
+          } catch (error) {
+            console.error('Error removing team member:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to remove member',
+              isLoading: false,
+            });
+            // Revert optimistic update on error (optional)
+            set((state) => ({
+              teams: state.teams.map((team) => {
+                if (team.id === teamId) {
+                  const originalTeam = get().teams.find(t => t.id === teamId);
+                  return originalTeam || team;
+                }
+                return team;
+              }),
+            }));
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
+        deleteTeam: async (teamId: string) => {
+          try {
+            set({ isLoading: true, error: null });
+            // Optimistically update the UI
+            set((state) => ({
+              teams: state.teams.filter((team) => team.id !== teamId),
+            }));
+
+            // Call API to delete the team
+            await api.deleteTeam(teamId);
+          } catch (error) {
+            console.error('Error deleting team:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to delete team',
+              isLoading: false,
+            });
+            // Revert optimistic update on error (optional)
+            // This would involve re-adding the deleted team if the API call fails, which is complex
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
+        inviteTeamMember: async (teamId: string, email: string) => {
+          try {
+            set({ isLoading: true, error: null });
+            console.log(`Inviting ${email} to team ${teamId}...`);
+
+            // Call API to send invitation
+            await api.inviteTeamMember(teamId, email);
+
+            console.log(`Invitation sent to ${email} for team ${teamId} successfully.`);
+            
+            const team = get().teams.find(t => t.id === teamId);
+            if (team && get().user) {
+              const newInvitation: TeamInvitation = {
+                id: `inv_${Date.now()}`,
+                teamId: team.id,
+                teamName: team.name,
+                inviterName: get().user?.name || get().user?.email || 'Unknown',
+                recipientEmail: email,
+              };
+              set((state) => ({ pendingInvitations: [...state.pendingInvitations, newInvitation] }));
+            }
+          } catch (error) {
+            console.error('Error inviting team member:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to send invitation',
+              isLoading: false,
+            });
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
+        acceptTeamInvitation: async (invitationId: string, teamId: string) => {
+          try {
+            set({ isLoading: true, error: null });
+            console.log(`Accepting invitation ${invitationId} for team ${teamId}...`);
+
+            await api.acceptTeamInvitation(invitationId, teamId); // Call API to accept invitation
+
+            // Remove the accepted invitation from pendingInvitations
+            set((state) => ({
+              pendingInvitations: state.pendingInvitations.filter(
+                (inv) => inv.id !== invitationId
+              ),
+            }));
+
+            // After successful acceptance, fetch updated team data or update local state directly
+            // For now, we'll just log and assume backend handles membership addition
+            console.log(`Invitation ${invitationId} for team ${teamId} accepted successfully.`);
+            // Optionally, refresh teams or add the user to the team locally if the backend response includes team data
+            // const updatedTeam = await api.getTeam(teamId); // Example to refetch a single team
+            // set((state) => ({
+            //   teams: state.teams.map((t) => (t.id === teamId ? updatedTeam : t)),
+            // }));
+
+          } catch (error) {
+            console.error('Error accepting team invitation:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to accept invitation',
+              isLoading: false,
+            });
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
+        rejectTeamInvitation: async (invitationId: string, teamId: string) => {
+          try {
+            set({ isLoading: true, error: null });
+            console.log(`Rejecting invitation ${invitationId} for team ${teamId}...`);
+
+            await api.rejectTeamInvitation(invitationId, teamId); // Call API to reject invitation
+
+            // Remove the rejected invitation from pendingInvitations
+            set((state) => ({
+              pendingInvitations: state.pendingInvitations.filter(
+                (inv) => inv.id !== invitationId
+              ),
+            }));
+
+            console.log(`Invitation ${invitationId} for team ${teamId} rejected successfully.`);
+            // No local state update needed here as the invitation is simply removed
+          } catch (error) {
+            console.error('Error rejecting team invitation:', error);
+            set({
+              error: error instanceof Error ? error.message : 'Failed to reject invitation',
+              isLoading: false,
+            });
+            throw error;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
+
         updateTask: async (taskId: string, updates: Partial<Task>) => {
           try {
             set({ isLoading: true, error: null });
@@ -415,13 +827,13 @@ export const useTaskStore = create<TaskState>()(
           }
         },
 
-        updateScheduledTask: async (taskId: string, updates: Partial<ScheduledTask>) => {
+        updateScheduledTask: async (taskId: string, updates: Partial<ScheduledTask> & { teamId?: string }) => {
           const updatedTask = await api.updateTask(taskId, { ...updates, scheduled: true });
           const scheduledTask: ScheduledTask = {
             id: updatedTask.id,
             title: updatedTask.title,
             time: updatedTask.startTime || 'false',
-            team: updatedTask.team || [],
+            teamId: updatedTask.teamId, // Use teamId here
             color: updatedTask.color,
             hasCall: updates.hasCall || false,
             categoryId: updatedTask.categoryId || 'default'
@@ -540,6 +952,14 @@ export const useTaskStore = create<TaskState>()(
               console.error('Error loading categories:', error);
             }
 
+            // Initialize teams
+            try {
+              const teams = await api.getTeams();
+              set({ teams: teams });
+            } catch (error) {
+              console.error('Error loading teams:', error);
+            }
+
             console.log('Data initialization complete');
           } catch (error) {
             console.error('Error initializing data:', error);
@@ -598,7 +1018,7 @@ export const useTaskStore = create<TaskState>()(
                     id: taskWithColor.id,
                     title: taskWithColor.title,
                     time: taskWithColor.startTime, // Use startTime for scheduled task time
-                    team: taskWithColor.team || [],
+                    teamId: taskWithColor.teamId, // Use teamId here
                     color: taskWithColor.color,
                     hasCall: taskWithColor.hasCall || false,
                     categoryId: taskWithColor.categoryId || 'default'
